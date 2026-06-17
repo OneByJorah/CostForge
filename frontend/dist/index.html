@@ -1,8 +1,8 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>CostForge — Live API Cost Comparison</title>
 <style>
 :root{--bg:#0b0f17;--panel:#111827;--muted:#6b7280;--text:#e5e7eb;--accent:#22c55e;--warn:#f59e0b;--danger:#ef4444}
@@ -21,54 +21,239 @@ th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:
 td{padding:8px;border-bottom:1px solid #1f2937}
 tr:hover td{background:#0f172a}
 .footer{padding:18px 24px;color:var(--muted);font-size:12px}
+.hero{background:radial-gradient(1200px 400px at 50% -60%,rgba(34,197,94,.12),transparent 70%),var(--panel);border:1px solid #1f2937;border-radius:14px;margin:20px;padding:24px;text-align:center;position:relative}
+.hero .eyebrow{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.12em;margin:0 0 10px}
+.meter{font-size:64px;font-weight:700;color:var(--accent);letter-spacing:-.04em}
+.hero-sub{color:var(--muted);font-size:14px;margin-top:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 24px 20px}
+.chip{background:#0b0f17;border:1px solid #1f2937;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted)}
+.chip-prefix{color:var(--warn);font-family:monospace}
+.panel-stack{display:grid;grid-template-columns:1fr 360px;gap:14px;padding:0 20px 20px}
+@media(max-width:920px){.panel-stack{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid #1f2937;border-radius:14px;padding:16px}
+.panel h2{margin:0 0 10px;font-size:14px}
+.small{font-size:12px;color:var(--muted)}
+.provider-bar-row{margin-bottom:10px}
+.provider-bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.provider-bar-track{height:8px;background:#1f2937;border-radius:999px;overflow:hidden}
+.provider-bar-fill{height:100%;background:var(--accent);width:0}
+#sparkline{width:100%;height:120px;display:block}
+.estimated{background:#f59e0b22;color:#f59e0b;padding:2px 6px;border-radius:999px;font-size:11px;text-transform:uppercase}
 </style>
 </head>
 <body>
 <header>
   <h1>CostForge <span style="color:var(--accent)">◆</span></h1>
-  <div class="badge" id="clock">live</div>
+  <div class="badge" id="clock">loading</div>
 </header>
+
+<div class="hero">
+  <p class="eyebrow">What this usage would have cost on premium APIs</p>
+  <div class="meter" id="meterSaved">$0.00</div>
+  <p class="hero-sub" id="heroSub">0 requests metered, $0.00 actually spent</p>
+  <p class="sub" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"><span id="connDot" style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block"></span><span id="connText">connecting…</span></p>
+</div>
+
+<div class="chips" id="providerList"></div>
+
 <div class="grid">
   <div class="card"><h3>Requests</h3><div class="num" id="n-req">0</div><div class="sub">time window</div></div>
   <div class="card"><h3>Input tokens</h3><div class="num" id="n-in">0</div><div class="sub">across providers</div></div>
   <div class="card"><h3>Output tokens</h3><div class="num" id="n-out">0</div><div class="sub">prompt / completion</div></div>
-  <div class="card"><h3>Est. premium replacement</h3><div class="num" id="n-premium">$0</div><div class="sub">if all calls were paid APIs at listed rates</div></div>
+  <div class="card"><h3>Premium replacement</h3><div class="num" id="n-premium">$0</div><div class="sub">if all calls were paid APIs at listed rates</div></div>
 </div>
-<div class="grid" style="grid-template-columns:1fr">
-  <div class="card">
-    <h3>Provider breakdown</h3>
+
+<div class="panel-stack">
+  <div class="panel">
+    <h2>Live ledger <span class="small" style="font-weight:400">most recent first</span></h2>
     <table>
-      <thead><tr><th>Source</th><th>Model</th><th>Requests</th><th>Input</th><th>Output</th><th>Effective cost</th><th>Premium equivalent</th></tr></thead>
+      <thead><tr><th>time</th><th>source</th><th>model</th><th>tokens in / out</th><th>stands in for</th><th>would've cost</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
   </div>
+  <div>
+    <div class="panel">
+      <h2>By provider</h2>
+      <div id="providerBars"></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2>Savings over time</h2>
+      <canvas id="sparkline" height="120"></canvas>
+    </div>
+  </div>
 </div>
-<div class="footer">Self-hosted stack shows $0.00 for effective cost, but still shows premium equivalent as a benchmark.</div>
+
+<div class="footer">
+  Self-hosted stack shows $0.00 for effective cost, but still shows premium equivalent as a benchmark.
+  Route traffic through /proxy/* endpoints to meter live.
+</div>
+
 <script>
-async function load(){
-  try{
-    const r=await fetch('/api/summary?days=7');
-    const j=await r.json();
-    let req=0,inp=0,out=0,prem=0;
-    const tb=document.getElementById('rows'); tb.innerHTML='';
-    for(const it of j.items){
-      req+=it.requests; inp+=it.input_tokens; out+=it.output_tokens; prem+=it.premium_equivalent||0;
-      const isLocal = it.source.includes('selfhost')||it.source.includes('local')||it.source.includes('free');
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${it.source}</td><td>${it.model}</td>
-        <td>${it.requests.toLocaleString()}</td><td>${it.input_tokens.toLocaleString()}</td><td>${it.output_tokens.toLocaleString()}</td>
-        <td style="color:${isLocal?'var(--accent)':'inherit'}">$${(it.effective_cost||0).toFixed(2)}</td>
-        <td>$${(it.premium_equivalent||0).toFixed(2)}</td>`;
-      tb.appendChild(tr);
-    }
-    document.getElementById('n-req').textContent=req.toLocaleString();
-    document.getElementById('n-in').textContent=inp.toLocaleString();
-    document.getElementById('n-out').textContent=out.toLocaleString();
-    document.getElementById('n-premium').textContent='$'+prem.toFixed(2);
-    document.getElementById('clock').textContent=new Date().toLocaleString();
-  }catch(e){ console.error(e); }
+const $ = (id)=>document.getElementById(id);
+const fmtMoney = (v)=>'$'+(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtTokens = (n)=>{if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'k';return String(n)};
+const fmtTime = (ts)=>new Date(ts).toLocaleTimeString('en-US',{hour12:false});
+
+let totals = {total_requests:0,total_tokens:0,premium_cost_usd:0,estimated_count:0};
+let byProvider = [];
+let timeseries = [];
+const state = {totals, byProvider, timeseries};
+
+function renderMeter(value, {animate} = {}){
+  const text = fmtMoney(value);
+  $('meterSaved').innerHTML='';
+  for(const ch of text){
+    const span=document.createElement('span');
+    span.className='digit'+(/[0-9]/.test(ch)?'':' punct');
+    span.textContent=ch;
+    if(animate) span.classList.add('pulse');
+    $('meterSaved').appendChild(span);
+  }
 }
-load(); setInterval(load, 5000);
+
+function renderStats(){
+  const t = state.totals;
+  $('n-req').textContent = (t.total_requests||0).toLocaleString();
+  $('n-in').textContent = fmtTokens(t.total_tokens||0);
+  $('n-out').textContent = '—';
+  $('n-premium').textContent = fmtMoney(t.premium_cost_usd||0);
+  $('heroSub').textContent = `${(t.total_requests||0).toLocaleString()} requests metered, $0.00 actually spent`;
+}
+
+function renderProviderBars(){
+  const el=$('providerBars');
+  if(!state.byProvider.length){ el.innerHTML='<p class="small">No usage recorded yet.</p>'; return }
+  const els = state.byProvider.slice(0,20);
+  const max = Math.max(...els.map(p=>p.premium_cost_usd),0.0001);
+  el.innerHTML = els.map(p=>`<div class="provider-bar-row">
+    <div class="provider-bar-label"><span>${escapeHtml(p.provider_label||p.provider_id)}</span><span>${fmtMoney(p.premium_cost_usd)}</span></div>
+    <div class="provider-bar-track"><div class="provider-bar-fill" style="width:${Math.max(2,Math.round((p.premium_cost_usd/max)*100))}%"></div></div>
+  </div>`).join('');
+}
+
+function renderProviderChips(providers){
+  $('providerList').innerHTML=providers.map(p=>`<span class="chip"><span class="chip-prefix">${escapeHtml(p.proxyPrefix)}</span> → ${escapeHtml(p.label)}</span>`).join('');
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderRow(r,{isNew}={}){
+  const tr=document.createElement('tr');
+  if(isNew) tr.className='new-row';
+  const est = r.estimated ? '<span class="estimated">est</span>' : '';
+  tr.innerHTML=`<td>${fmtTime(r.ts||Date.now())}</td><td>${escapeHtml(r.source||r.provider_label||r.provider_id)}</td><td>${escapeHtml(r.model||'unknown')}</td><td>${(r.input_tokens??r.tokens_in??0).toLocaleString()} / ${(r.output_tokens??r.tokens_out??0).toLocaleString()} ${est}</td><td>${escapeHtml(r.premium_model||'—')}</td><td>${fmtMoney(r.premium_cost_usd||0)}</td>`;
+  return tr;
+}
+
+function renderLedger(rows){
+  const tbody=$('rows'); tbody.innerHTML='';
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="6" style="color:var(--muted)">Nothing metered yet. Point a client at /proxy/* and send a request.</td></tr>'; return }
+  rows.slice(0,100).forEach(r=>tbody.appendChild(renderRow(r)));
+}
+
+function prependRow(r){
+  const empty=$('rows').querySelector('tr td[colspan]');
+  if(empty) empty.parentElement.remove();
+  const tbody=$('rows');
+  tbody.insertBefore(renderRow(r,{isNew:true}), tbody.firstChild);
+  while(tbody.children.length>100) tbody.removeChild(tbody.lastChild);
+}
+
+function drawSparkline(){
+  const canvas=$('sparkline');
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.clientWidth*dpr;
+  canvas.height=120*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,canvas.clientWidth,120);
+
+  if(!state.timeseries.length){ ctx.fillStyle='#6b7280'; ctx.font='12px monospace'; ctx.fillText('not enough data yet',8,64); return }
+
+  let running=0;
+  const series=state.timeseries.map(p=>{ running += p.premium_cost_usd||0; return running });
+  const max=Math.max(...series,0.0001);
+  const w=canvas.clientWidth;
+  const h=120;
+  const stepX=w/Math.max(series.length-1,1);
+
+  ctx.beginPath();
+  series.forEach((val,i)=>{
+    const x=i*stepX;
+    const y=h-(val/max)*(h-16)-8;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle='#22c55e'; ctx.lineWidth=2; ctx.stroke();
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  ctx.fillStyle='rgba(34,197,94,0.08)'; ctx.fill();
+}
+
+function pushPoint(record){
+  const bucket = Math.floor(record.ts/60000)*60000;
+  const last = state.timeseries[state.timeseries.length-1];
+  if(last && last.bucket===bucket){ last.premium_cost_usd += (record.premium_cost_usd||0); last.requests=(last.requests||0)+1; }
+  else state.timeseries.push({bucket,premium_cost_usd:(record.premium_cost_usd||0),requests:1});
+  if(state.timeseries.length>500) state.timeseries.shift();
+}
+
+function apply(record){
+  state.totals.total_requests = (state.totals.total_requests||0)+1;
+  state.totals.total_tokens = (state.totals.total_tokens||0)+(record.input_tokens??record.tokens_in??0)+(record.output_tokens??record.tokens_out??0);
+  state.totals.premium_cost_usd = (state.totals.premium_cost_usd||0)+(record.premium_cost_usd||0);
+  state.totals.estimated_count = (state.totals.estimated_count||0)+(record.estimated?1:0);
+
+  const pid = record.provider_id||record.source;
+  let entry = state.byProvider.find(p=>p.provider_id===pid);
+  if(!entry){ entry={provider_id:pid, provider_label:record.provider_label||record.source, premium_cost_usd:0, requests:0, tokens_in:0, tokens_out:0}; state.byProvider.push(entry); }
+  entry.premium_cost_usd += (record.premium_cost_usd||0);
+  entry.requests += 1;
+  entry.tokens_in = (entry.tokens_in||0)+(record.input_tokens??record.tokens_in??0);
+  entry.tokens_out = (entry.tokens_out||0)+(record.output_tokens??record.tokens_out??0);
+
+  pushPoint(record);
+  renderMeter(state.totals.premium_cost_usd,{animate:true});
+  renderStats();
+  renderProviderBars();
+  prependRow(record);
+  drawSparkline();
+}
+
+function setConn(ok){ $('connDot').style.background = ok ? 'var(--accent)' : 'var(--warn)'; $('connText').textContent = ok ? 'live' : 'reconnecting…'; }
+
+async function loadInitial(){
+  const [statsRes, recentRes, tsRes, providersRes, pricingRes] = await Promise.all([
+    fetch('/api/stats').then(r=>r.json()),
+    fetch('/api/recent?limit=100').then(r=>r.json()),
+    fetch('/api/timeseries?rangeMinutes=180').then(r=>r.json()),
+    fetch('/api/providers').then(r=>r.json()),
+    fetch('/api/pricing').then(r=>r.json()),
+  ]);
+  state.totals = statsRes.totals || {total_requests:0,total_tokens:0,premium_cost_usd:0,estimated_count:0};
+  state.byProvider = statsRes.byProvider || [];
+  state.timeseries = Array.isArray(tsRes)?tsRes:[];
+
+  renderMeter(state.totals.premium_cost_usd);
+  renderStats();
+  renderProviderBars();
+  renderLedger(Array.isArray(recentRes)?recentRes:[]);
+  renderProviderChips(Array.isArray(providersRes)?providersRes:[]);
+  drawSparkline();
+}
+
+function connectWs(){
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  ws.onopen = ()=>{ setConn(true); };
+  ws.onclose = ()=>{ setConn(false); setTimeout(connectWs, 2000); };
+  ws.onerror = ()=> ws.close();
+  ws.onmessage = (e)=>{ try{ const msg=JSON.parse(e.data); if(msg.type==='usage' && msg.record) apply(msg.record); }catch(_){} };
+}
+
+loadInitial().finally(connectWs);
+window.addEventListener('resize', drawSparkline);
+setInterval(()=>{ $('clock').textContent = new Date().toLocaleString(); }, 1000);
 </script>
 </body>
 </html>
