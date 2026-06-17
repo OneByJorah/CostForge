@@ -98,4 +98,4 @@ def summary(days: int = 7):
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard():
-    return (APP_DIR.parent.parent / "frontend" / "dist" / "index.html").read_text()
+    return (APP_DIR.parent / "frontend" / "dist" / "index.html").read_text()
