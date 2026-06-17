@@ -1,0 +1,96 @@
+[
+  {
+    "id": "ollama",
+    "label": "Ollama (local)",
+    "type": "local",
+    "baseUrl": "http://localhost:11434",
+    "proxyPrefix": "/proxy/ollama",
+    "responseFormat": "ollama",
+    "notes": "Point your app at http://127.0.0.1:17890/proxy/ollama instead of http://localhost:11434",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini",
+      "llama3.1:8b": "gpt-4o-mini",
+      "llama3.1:70b": "gpt-4o",
+      "llama3.2": "gpt-4o-mini",
+      "mistral": "gpt-4o-mini",
+      "qwen2.5": "gpt-4o-mini",
+      "deepseek-r1": "claude-sonnet-4-6"
+    }
+  },
+  {
+    "id": "lmstudio",
+    "label": "LM Studio (local)",
+    "type": "local",
+    "baseUrl": "http://localhost:1234",
+    "proxyPrefix": "/proxy/lmstudio",
+    "responseFormat": "openai",
+    "notes": "Point your app at http://127.0.0.1:17890/proxy/lmstudio/v1 instead of http://localhost:1234/v1",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini"
+    }
+  },
+  {
+    "id": "vllm",
+    "label": "vLLM (local)",
+    "type": "local",
+    "baseUrl": "http://localhost:8000",
+    "proxyPrefix": "/proxy/vllm",
+    "responseFormat": "openai",
+    "notes": "Point your app at http://127.0.0.1:17890/proxy/vllm/v1 instead of http://localhost:8000/v1",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini"
+    }
+  },
+  {
+    "id": "groq",
+    "label": "Groq (free tier)",
+    "type": "cloud-free",
+    "baseUrl": "https://api.groq.com/openai/v1",
+    "proxyPrefix": "/proxy/groq",
+    "responseFormat": "openai",
+    "notes": "Send your Groq API key as a normal Authorization: Bearer *** it passes straight through.",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini",
+      "llama-3.1-70b-versatile": "gpt-4o",
+      "llama-3.3-70b-versatile": "gpt-4o"
+    }
+  },
+  {
+    "id": "openrouter-free",
+    "label": "OpenRouter (free models)",
+    "type": "cloud-free",
+    "baseUrl": "https://openrouter.ai/api/v1",
+    "proxyPrefix": "/proxy/openrouter",
+    "responseFormat": "openai",
+    "notes": "Only meaningful when calling OpenRouter's :free model variants. Send your usual Authorization header.",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini"
+    }
+  },
+  {
+    "id": "gemini",
+    "label": "Google Gemini (free tier)",
+    "type": "cloud-free",
+    "baseUrl": "https://generativelanguage.googleapis.com",
+    "proxyPrefix": "/proxy/gemini",
+    "responseFormat": "gemini",
+    "notes": "Keep your ?key= query param on requests as usual, it passes straight through.",
+    "premiumEquivalent": {
+      "default": "gemini-2.5-pro",
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "gemini-2.5-flash-lite": "gemini-2.5-flash-lite"
+    }
+  },
+  {
+    "id": "huggingface",
+    "label": "Hugging Face Inference (free tier)",
+    "type": "cloud-free",
+    "baseUrl": "https://api-inference.huggingface.co",
+    "proxyPrefix": "/proxy/hf",
+    "responseFormat": "generic",
+    "notes": "Generic responses without a usage field are token-estimated rather than exact.",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini"
+    }
+  }
+]
