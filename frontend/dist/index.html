@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CostForge — Live API Cost Comparison</title>
+<style>
+:root{--bg:#0b0f17;--panel:#111827;--muted:#6b7280;--text:#e5e7eb;--accent:#22c55e;--warn:#f59e0b;--danger:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--text)}
+header{padding:18px 24px;border-bottom:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:18px;margin:0}
+header .badge{background:#111827;border:1px solid #1f2937;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px}
+.card{background:var(--panel);border:1px solid #1f2937;border-radius:14px;padding:16px}
+.card h3{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.card .num{font-size:28px;font-weight:700}
+.card .sub{font-size:12px;color:var(--muted);margin-top:6px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:500;padding:8px;border-bottom:1px solid #1f2937;font-size:12px}
+td{padding:8px;border-bottom:1px solid #1f2937}
+tr:hover td{background:#0f172a}
+.footer{padding:18px 24px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>CostForge <span style="color:var(--accent)">◆</span></h1>
+  <div class="badge" id="clock">live</div>
+</header>
+<div class="grid">
+  <div class="card"><h3>Requests</h3><div class="num" id="n-req">0</div><div class="sub">time window</div></div>
+  <div class="card"><h3>Input tokens</h3><div class="num" id="n-in">0</div><div class="sub">across providers</div></div>
+  <div class="card"><h3>Output tokens</h3><div class="num" id="n-out">0</div><div class="sub">prompt / completion</div></div>
+  <div class="card"><h3>Est. premium replacement</h3><div class="num" id="n-premium">$0</div><div class="sub">if all calls were paid APIs at listed rates</div></div>
+</div>
+<div class="grid" style="grid-template-columns:1fr">
+  <div class="card">
+    <h3>Provider breakdown</h3>
+    <table>
+      <thead><tr><th>Source</th><th>Model</th><th>Requests</th><th>Input</th><th>Output</th><th>Effective cost</th><th>Premium equivalent</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+<div class="footer">Self-hosted stack shows $0.00 for effective cost, but still shows premium equivalent as a benchmark.</div>
+<script>
+async function load(){
+  try{
+    const r=await fetch('/api/summary?days=7');
+    const j=await r.json();
+    let req=0,inp=0,out=0,prem=0;
+    const tb=document.getElementById('rows'); tb.innerHTML='';
+    for(const it of j.items){
+      req+=it.requests; inp+=it.input_tokens; out+=it.output_tokens; prem+=it.premium_equivalent||0;
+      const isLocal = it.source.includes('selfhost')||it.source.includes('local')||it.source.includes('free');
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${it.source}</td><td>${it.model}</td>
+        <td>${it.requests.toLocaleString()}</td><td>${it.input_tokens.toLocaleString()}</td><td>${it.output_tokens.toLocaleString()}</td>
+        <td style="color:${isLocal?'var(--accent)':'inherit'}">$${(it.effective_cost||0).toFixed(2)}</td>
+        <td>$${(it.premium_equivalent||0).toFixed(2)}</td>`;
+      tb.appendChild(tr);
+    }
+    document.getElementById('n-req').textContent=req.toLocaleString();
+    document.getElementById('n-in').textContent=inp.toLocaleString();
+    document.getElementById('n-out').textContent=out.toLocaleString();
+    document.getElementById('n-premium').textContent='$'+prem.toFixed(2);
+    document.getElementById('clock').textContent=new Date().toLocaleString();
+  }catch(e){ console.error(e); }
+}
+load(); setInterval(load, 5000);
+</script>
+</body>
+</html>

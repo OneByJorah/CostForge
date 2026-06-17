@@ -1,0 +1,37 @@
+{
+  "updated": "2026-06-17",
+  "notes": "Prices are guidance only; validate against provider docs.",
+  "providers": {
+    "anthropic": {
+      "claude-sonnet-4": {"input_per_million_usd": 3.0, "output_per_million_usd": 15.0}
+    },
+    "openai": {
+      "gpt-4.1-mini": {"input_per_million_usd": 0.40, "output_per_million_usd": 1.60},
+      "gpt-4.1": {"input_per_million_usd": 2.00, "output_per_million_usd": 8.00},
+      "whisper-1": {"input_per_million_usd": 0.006, "output_per_million_usd": 0.0}
+    },
+    "openrouter": {
+      "default": {"note": "Pass-through marketplace; pricing varies by upstream model."}
+    },
+    "google": {
+      "gemini-2.0-flash": {"input_per_million_usd": 0.10, "output_per_million_usd": 0.40}
+    },
+    "github": {
+      "api_calls": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "free tier up to limits"}
+    },
+    "telegram": {
+      "bot_api": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "free"}
+    },
+    "fal": {
+      "flux": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "free tier available"}
+    },
+    "microsoft": {
+      "edge-tts": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "free tier"}
+    },
+    "selfhost": {
+      "llama_cpp": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "compute only"},
+      "searxng": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "compute only"},
+      "browser/cdp": {"input_per_million_usd": 0, "output_per_million_usd": 0, "unit": "compute only"}
+    }
+  }
+}
