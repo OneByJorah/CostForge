@@ -1,27 +1,19 @@
-# CostForge — API Usage & Premium-vs-Free Cost Dashboard
+# CostForge — API / Platform Usage Dashboard
 
-Enterprise command-center for tracking AI / cloud API spend across self-hosted
-and free-tier cloud services, with real-time cost comparisons against premium
-paid tiers.
+Self-hosted dashboard for tracking API usage and cost comparison across free and premium services.
 
-## What it does
-- Ingest usage from JSONL usage log
-- Aggregate hourly / daily / monthly
-- Compare actual cost (free / self-hosted) vs premium equivalent
-- Live HTML dashboard
+## Verify locally
+1. `cd backend`
+2. `python3 -m venv .venv && source .venv/bin/activate`
+3. `pip install fastapi uvicorn sqlalchemy aiosqlite httpx orjson pydantic-settings`
+4. `uvicorn main:app --host 0.0.0.0 --port 9070`
+5. Health: http://localhost:9070/healthz
+6. Dashboard: http://localhost:9070/
 
-## Repo layout
-- `backend/` — FastAPI app (`main.py`, SQLite store, usage models)
-- `backend/ingest/` — importers for Telegram, OpenAI, OpenRouter, Hermes
-- `frontend/dist/` — all-in-one dashboard SPA
-- `pricing/` — free + premium rate cards
+## API
+- `POST /ingest`
+- `GET /api/summary?days=30`
+- `GET /api/usage?days=30`
 
-## Quick start
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install fastapi uvicorn sqlalchemy aiosqlite
-uvicorn main:app --host 0.0.0.0 --port 8080
-```
-Then open the dashboard URL shown in logs.
+## Screenshots
+- `docs/screenshots/costforge-dashboard.html`
