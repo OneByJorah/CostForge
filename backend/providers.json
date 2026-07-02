@@ -92,5 +92,17 @@
     "premiumEquivalent": {
       "default": "gpt-4o-mini"
     }
+  },
+  {
+    "id": "headroom",
+    "label": "Headroom / Aphrodite (local context optimization)",
+    "type": "local",
+    "baseUrl": "http://127.0.0.1:8787",
+    "proxyPrefix": "/proxy/headroom",
+    "responseFormat": "openai",
+    "notes": "Points at local Headroom proxy from StackDeploy vendor/headroom. Compresses context/tool outputs before upstream LLM; use in addition to upstream endpoint.",
+    "premiumEquivalent": {
+      "default": "gpt-4o-mini"
+    }
   }
 ]
