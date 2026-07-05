@@ -293,4 +293,4 @@ MIT
 Built by **Jhonattan L. Jimenez** (J1admin).
 
 - GitHub: [@OneByJorah](https://github.com/OneByJorah)
-- Tailscale: `ollama` (100.92.150.99)
+- Tailscale: `ollama` (<tailscale-ip>)
