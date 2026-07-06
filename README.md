@@ -45,7 +45,7 @@ cd CostForge
 docker compose up -d
 ```
 
-Open **http://localhost:8080** in your browser.
+Open **http://localhost:8090** in your browser.
 
 ## 🏗️ Architecture
 
