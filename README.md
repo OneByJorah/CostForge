@@ -22,6 +22,10 @@
 
 ---
 
+## 📸 Screenshot
+
+This is a CLI/backend-only tool. No screenshots available.
+
 ## ✨ Features
 
 - **Multi-Provider Cost Aggregation** — Compare pricing across cloud and LLM providers
