@@ -30,9 +30,11 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY main.py seed_demo.py ./
-COPY ingest/ ./ingest/
-COPY pricing/ ./pricing/
+COPY backend/main.py ./
+COPY backend/seed_demo.py ./
+COPY backend/ingest/ ./ingest/
+COPY backend/providers.json ./
+COPY pricing/catalog.json ./pricing.json
 
 # Create non-root user
 RUN addgroup --system --gid 1001 costforge && \

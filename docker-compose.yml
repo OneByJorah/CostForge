@@ -2,8 +2,8 @@ services:
   # --- CostForge Backend ---
   costforge-backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     image: jorahone/costforge-backend:latest
     container_name: costforge-backend
     ports:
