@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for layer caching
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Production stage ────────────────────────────────────────────────────────
@@ -30,8 +30,8 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY main.py seed_demo.py ./
-COPY ingest/ ./ingest/
+COPY backend/main.py backend/seed_demo.py ./
+COPY backend/ingest/ ./ingest/
 COPY pricing/ ./pricing/
 
 # Create non-root user
