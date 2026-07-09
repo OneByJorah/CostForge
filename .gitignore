@@ -20,3 +20,4 @@ build/
 *.so
 # Logs
 *.log
+backend/.venv/
