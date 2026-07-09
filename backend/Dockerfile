@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for layer caching
-COPY requirements.txt .
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Production stage ────────────────────────────────────────────────────────
@@ -30,11 +30,11 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY backend/main.py ./
-COPY backend/seed_demo.py ./
-COPY backend/ingest/ ./ingest/
-COPY backend/providers.json ./
-COPY pricing/catalog.json ./pricing.json
+COPY main.py ./
+COPY seed_demo.py ./
+COPY ingest/ ./ingest/
+COPY providers.json ./
+COPY pricing.json ./
 
 # Create non-root user
 RUN addgroup --system --gid 1001 costforge && \

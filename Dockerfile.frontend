@@ -10,14 +10,6 @@ COPY ./frontend/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create non-root user
-RUN addgroup --system --gid 1001 costforge && \
-    adduser --system --uid 1001 --ingroup costforge --no-create-home costforge && \
-    chown -R costforge:costforge /usr/share/nginx/html /var/cache/nginx /var/run && \
-    chmod -R 755 /usr/share/nginx/html
-
-USER costforge
-
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \

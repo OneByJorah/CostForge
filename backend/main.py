@@ -29,7 +29,7 @@ app.add_middleware(
 PROVIDERS_PATH = APP_DIR / "providers.json"
 PRICING_PATH = APP_DIR / "pricing.json"
 
-with open(APP_DIR.parent / "pricing" / "catalog.json", "r") as _f:
+with open(PRICING_PATH, "r") as _f:
     PRICE_MAP = json.load(_f)
 
 _providers: list[dict] = []
