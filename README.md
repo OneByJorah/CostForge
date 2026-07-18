@@ -1,101 +1,242 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white">
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white">
-  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white">
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge">
-</div>
 
-<br>
+  <img src="https://raw.githubusercontent.com/OneByJorah/CostForge/main/docs/logo.png" alt="CostForge Logo" width="120">
 
-<div align="center">
-  <h1>💰 CostForge</h1>
-  <p><strong>Self-Hosted Cloud &amp; API Cost Estimation Dashboard</strong></p>
-  <p>Track, compare, and estimate cloud/LLM API usage costs with zero external dependencies</p>
-  <p>
-    <a href="#-features">Features</a> •
-    <a href="#-quick-start">Quick Start</a> •
-    <a href="#-architecture">Architecture</a> •
-    <a href="#-pricing">Pricing</a>
-  </p>
+  # 💰 CostForge
+
+  **Self-Hosted Cloud & API Cost Estimation Dashboard**
+
+  Track, compare, and estimate cloud/LLM API usage costs with zero external dependencies
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+  [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+  [![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+
+  [Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [API](#-api-reference) • [Contributing](#-contributing)
+
 </div>
 
 ---
 
-## 📸 Screenshot
+## 📸 Screenshots
 
-This is a CLI/backend-only tool. No screenshots available.
+<div align="center">
+
+| Dashboard | Cost Comparison | Provider Breakdown |
+|-----------|-----------------|-------------------|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Comparison](docs/screenshots/comparison.png) | ![Providers](docs/screenshots/providers.png) |
+
+</div>
+
+> 💡 **Tip:** CostForge features a production-ready dark-themed dashboard with real-time cost tracking
+
+---
 
 ## ✨ Features
 
-- **Multi-Provider Cost Aggregation** — Compare pricing across cloud and LLM providers
-- **Self-Hosted** — Zero external dependencies, zero secrets in git
-- **Usage Ingestion** — Adapters normalize incoming cost/usage signals
-- **Dark Dashboard** — Production-ready dark-themed single-page dashboard
-- **Local Storage** — SQLite for usage data, JSON for pricing catalogs
-- **Cost Comparison** — Compare self-hosted vs premium API pricing
-- **REST API** — Programmatic access to cost data
-- **Docker Deploy** — One-command deployment
+| Feature | Description |
+|---------|-------------|
+| 🔍 **Multi-Provider Aggregation** | Compare pricing across AWS, GCP, Azure, OpenAI, Anthropic, and more |
+| 🏠 **100% Self-Hosted** | Zero external dependencies, zero secrets in git |
+| 📊 **Dark Dashboard** | Production-ready dark-themed single-page dashboard |
+| 💾 **Local Storage** | SQLite for usage data, JSON for pricing catalogs |
+| ⚡ **Cost Comparison** | Compare self-hosted vs premium API pricing |
+| 🔌 **REST API** | Full programmatic access to cost data |
+| 🐳 **Docker Deploy** | One-command deployment with Docker Compose |
+| 📈 **Usage Ingestion** | Adapters normalize incoming cost/usage signals |
+
+---
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+- Docker & Docker Compose
+- Git
+
+### Installation
+
 ```bash
+# Clone the repository
 git clone https://github.com/OneByJorah/CostForge.git
 cd CostForge
+
+# Start with Docker
 docker compose up -d
 ```
 
-Open **http://localhost:8090** in your browser.
+### Access the Dashboard
+
+Open **http://localhost:8090** in your browser
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `COSTFORGE_PORT` | `8090` | Dashboard port |
+| `COSTFORGE_DB` | `./data/costforge.db` | SQLite database path |
+
+---
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────┐
-│                 CostForge                     │
-│                                               │
-│  Browser ──▶ Nginx ──▶ FastAPI Backend        │
-│                            │                   │
-│                    ┌───────┴───────┐           │
-│                    ▼               ▼           │
-│              ┌──────────┐   ┌──────────┐     │
-│              │  SQLite  │   │   JSON   │     │
-│              │  Usage   │   │ Pricing  │     │
-│              │  Data    │   │ Catalog  │     │
-│              └──────────┘   └──────────┘     │
-└──────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        CostForge                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────┐      ┌─────────┐      ┌─────────────────┐   │
+│   │ Browser │ ───▶ │ Nginx   │ ───▶ │  FastAPI Backend │   │
+│   └─────────┘      └─────────┘      └────────┬────────┘   │
+│                                               │             │
+│                                   ┌───────────┴───────────┐ │
+│                                   │                       │ │
+│                                   ▼                       ▼ │
+│                            ┌──────────┐           ┌──────────┐
+│                            │  SQLite  │           │   JSON   │
+│                            │  Usage   │           │ Pricing  │
+│                            │  Data    │           │ Catalog  │
+│                            └──────────┘           └──────────┘
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## 🔧 API Endpoints
+### Tech Stack
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Dashboard UI |
-| `/api/costs` | GET | Usage cost data |
-| `/api/pricing` | GET | Provider pricing catalog |
-| `/api/compare` | GET | Cost comparison data |
-| `/api/ingest` | POST | Ingest usage data |
+| Component | Technology |
+|-----------|------------|
+| **Backend** | Python 3.10+, FastAPI, Uvicorn |
+| **Frontend** | HTML5, CSS3, Vanilla JS |
+| **Database** | SQLite 3 |
+| **Reverse Proxy** | Nginx |
+| **Deployment** | Docker Compose |
+
+---
 
 ## 📁 Project Structure
 
 ```
 CostForge/
-├── backend/              # FastAPI backend server
-├── frontend/             # SPA frontend
-├── pricing/              # Pricing catalog data
-├── scripts/              # Utility scripts
-├── docs/                 # Documentation
-├── docker-compose.yml    # Docker deployment
-├── nginx.conf            # Reverse proxy config
-└── stack_manifest.json   # Stack metadata
+├── backend/                  # FastAPI backend server
+│   ├── main.py              # Application entry point
+│   ├── routers/             # API route handlers
+│   ├── models/              # Data models
+│   └── services/            # Business logic
+├── frontend/                # SPA frontend
+│   ├── index.html           # Main dashboard
+│   ├── css/                 # Stylesheets
+│   └── js/                  # JavaScript modules
+├── pricing/                 # Pricing catalog data
+│   ├── aws.json             # AWS pricing
+│   ├── gcp.json             # GCP pricing
+│   └── llm.json             # LLM API pricing
+├── scripts/                 # Utility scripts
+├── docs/                    # Documentation
+│   └── screenshots/         # Dashboard screenshots
+├── docker-compose.yml       # Docker deployment
+├── nginx.conf               # Reverse proxy config
+└── stack_manifest.json      # Stack metadata
 ```
+
+---
+
+## 🔌 API Reference
+
+| Endpoint | Method | Description | Response |
+|----------|--------|-------------|----------|
+| `/` | `GET` | Dashboard UI | HTML |
+| `/api/costs` | `GET` | Usage cost data | JSON |
+| `/api/pricing` | `GET` | Provider pricing catalog | JSON |
+| `/api/compare` | `GET` | Cost comparison data | JSON |
+| `/api/ingest` | `POST` | Ingest usage data | JSON |
+| `/api/providers` | `GET` | List all providers | JSON |
+| `/api/history` | `GET` | Historical cost data | JSON |
+
+### Example Request
+
+```bash
+# Get current costs
+curl http://localhost:8090/api/costs
+
+# Get pricing catalog
+curl http://localhost:8090/api/pricing
+
+# Ingest usage data
+curl -X POST http://localhost:8090/api/ingest \
+  -H "Content-Type: application/json" \
+  -d '{"provider": "openai", "model": "gpt-4", "tokens": 1000}'
+```
+
+---
+
+## 🛠️ Development
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/OneByJorah/CostForge.git
+cd CostForge
+
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+
+# Start development server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Running Tests
+
+```bash
+# Run backend tests
+cd backend
+pytest
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
 
 ## 📄 License
 
-MIT © Jhonattan L. Jimenez
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🔒 Security
+
+For security concerns, please see [SECURITY.md](SECURITY.md).
+
+---
+
+## 💬 Support
+
+- 📧 Email: support@jorah.one
+- 🐛 Issues: [GitHub Issues](https://github.com/OneByJorah/CostForge/issues)
+- 📖 Docs: [Documentation](docs/)
 
 ---
 
 <div align="center">
-  <p>📊 Know your cloud costs — self-hosted</p>
-  <p><a href="https://github.com/OneByJorah">@OneByJorah</a></p>
+
+  **Built with ❤️ by [Jhonattan L. Jimenez](https://github.com/OneByJorah)**
+
+  [⬆ Back to Top](#-costforge)
+
 </div>
