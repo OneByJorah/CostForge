@@ -8,16 +8,20 @@ Prerequisites:
     pip install playwright
     python -m playwright install chromium
 
-This script captures screenshots of the CostForge dashboard and saves them
-to docs/screenshots/ for use in the README.
+Environment Variables:
+    COSTFORGE_URL: Base URL (default: http://localhost:8090)
+    SCREENSHOT_DIR: Output directory (default: docs/screenshots)
 """
 from playwright.sync_api import sync_playwright
 import time
-import subprocess
-import sys
+import os
 
-SCREENSHOT_DIR = "/home/j1coder/github-repos/CostForge/docs/screenshots"
-BASE_URL = "http://localhost:8090"
+# Configurable via environment variables
+BASE_URL = os.environ.get("COSTFORGE_URL", "http://localhost:8090")
+SCREENSHOT_DIR = os.environ.get("SCREENSHOT_DIR", "docs/screenshots")
+
+# Ensure screenshot directory exists
+os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 def capture_screenshots():
     """Capture CostForge dashboard screenshots."""
@@ -33,15 +37,24 @@ def capture_screenshots():
         
         for screenshot in screenshots:
             print(f"Capturing {screenshot['name']}...")
-            page.goto(BASE_URL, wait_until="networkidle", timeout=30000)
-            page.wait_for_load_state("networkidle")
-            
-            if screenshot["scroll"] > 0:
-                page.evaluate(f"window.scrollTo(0, {screenshot['scroll']})")
-                time.sleep(1)
-            
-            page.screenshot(path=screenshot["path"], full_page=False)
-            print(f"Saved: {screenshot['path']}")
+            try:
+                page.goto(BASE_URL, wait_until="networkidle", timeout=30000)
+                
+                if screenshot["scroll"] > 0:
+                    page.evaluate(f"window.scrollTo(0, {screenshot['scroll']})")
+                    time.sleep(1)
+                
+                page.screenshot(path=screenshot["path"], full_page=False)
+                
+                # Validate screenshot size (should be >10KB)
+                file_size = os.path.getsize(screenshot["path"])
+                if file_size < 10240:
+                    print(f"Warning: {screenshot['name']} is only {file_size} bytes - may be blank")
+                else:
+                    print(f"Saved: {screenshot['path']} ({file_size:,} bytes)")
+            except Exception as e:
+                print(f"Error capturing {screenshot['name']}: {e}")
+                raise
         
         browser.close()
     
