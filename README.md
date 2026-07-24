@@ -1,31 +1,24 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white">
-  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white">
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
-</div>
 
-<br>
+![CostForge banner](docs/assets/banner.svg)
 
-<div align="center">
-  <h1>CostForge</h1>
-  <p><strong>Cloud & API Cost Estimation Dashboard</strong></p>
-  <p>Track, compare, and estimate cloud infrastructure and LLM API usage costs — zero external dependencies.</p>
-  <p>
-    <a href="#features">Features</a> •
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#architecture">Architecture</a> •
-    <a href="#contributing">Contributing</a>
-  </p>
+# CostForge
+
+Self-hosted cloud and API cost estimation dashboard
+
+![License](https://img.shields.io/badge/license-MIT-brightgreen)
+![Language](https://img.shields.io/badge/language-Python-blue)
 </div>
 
 ---
 
-## Screenshot
+<p align="center">
+  <img src="docs/assets/screenshot.png" alt="CostForge preview" width="90%">
+</p>
 
-![CostForge Dashboard](docs/screenshot.png)
-*Dark-themed cost estimation dashboard with multi-provider aggregation and historical charts.*
+<br>
+
+---
 
 ## Features
 
@@ -57,7 +50,6 @@ cd backend
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 
-# Frontend
 cd ../frontend
 python3 -m http.server 3000
 ```
@@ -148,7 +140,18 @@ MIT © Jhonattan L. Jimenez
 
 ---
 
-<div align="center">
-  <p>Cost visibility for self-hosted AI infrastructure.</p>
-  <p><a href="https://github.com/OneByJorah">@OneByJorah</a></p>
-</div>
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). All contributions follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## 🔒 Security
+
+Found a vulnerability? Please follow our [Security Policy](SECURITY.md) and report privately to `security@jorahone.com`.
+
+## 📄 License
+
+[MIT License](LICENSE) © Jhonattan L. Jimenez (OneByJorah)
+
+---
+
+<p align="center">Built with 🌴 by <a href="https://github.com/OneByJorah">OneByJorah</a> · <a href="https://jorahone.com">jorahone.com</a></p>
