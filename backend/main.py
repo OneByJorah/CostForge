@@ -10,7 +10,7 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
-from starlette.websockets import WebSocket
+from starlette.websockets import WebSocket, WebSocketState
 
 APP_DIR = Path(__file__).parent
 DB_PATH = os.getenv("COSTFORGE_DB", str(APP_DIR / "costforge.db"))
@@ -21,16 +21,12 @@ app = FastAPI(title="CostForge")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 PROVIDERS_PATH = APP_DIR / "providers.json"
 PRICING_PATH = APP_DIR / "pricing.json"
-
-with open(PRICING_PATH, "r") as _f:
-    PRICE_MAP = json.load(_f)
 
 _providers: list[dict] = []
 _pricing: dict[str, dict] = {}
@@ -60,7 +56,9 @@ def load_pricing() -> dict:
     if not PRICING_PATH.exists():
         return _pricing
     with open(PRICING_PATH, "r") as f:
-        _pricing = json.load(f)
+        data = json.load(f)
+    # Catalogs nest rates under a "models" key; fall back to a flat map.
+    _pricing = data.get("models") if isinstance(data, dict) and isinstance(data.get("models"), dict) else data
     return _pricing
 
 
@@ -241,6 +239,11 @@ def _premium_cost(premium_model: str, tokens_in: int, tokens_out: int) -> float:
 
 # ─── Proxy middleware ───────────────────────────────────────────────────────
 
+_HOP_BY_HOP = {
+    "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
+    "te", "trailer", "transfer-encoding", "upgrade",
+}
+
 
 @app.api_route("/proxy/{provider_id}/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"])
 async def proxy_handler(request: Request, provider_id: str, path: str):
@@ -258,8 +261,8 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
         url = f"{url}?{request.url.query}"
 
     headers = dict(request.headers)
-    headers.pop("host", None)
-    headers.pop("content-length", None)
+    for h in {"host", "content-length"} | _HOP_BY_HOP:
+        headers.pop(h, None)
 
     body = await request.body()
 
@@ -274,8 +277,13 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
         async with httpx.AsyncClient(timeout=60.0) as http_client:
             resp = await http_client.request(method, url, headers=headers, content=body)
             status_code = resp.status_code
-            headers_out = dict(resp.headers)
-            response_body = resp.content
+            response_body = resp.content  # already content-decoded by httpx
+            # Body is decoded; drop length/encoding markers that describe the
+            # upstream wire format, plus hop-by-hop headers.
+            headers_out = {
+                k: v for k, v in resp.headers.items()
+                if k.lower() not in _HOP_BY_HOP | {"content-length", "content-encoding"}
+            }
     except Exception as exc:
         status_code = 502
         headers_out["content-type"] = "text/plain"
@@ -326,6 +334,18 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
                 elapsed_ms,
             ),
         )
+    hub.push_usage(
+        {
+            "ts": datetime.utcnow().isoformat(),
+            "source": provider.get("label") or provider_id,
+            "model": model,
+            "input_tokens": t_in,
+            "output_tokens": t_out,
+            "premium_model": premium_model,
+            "premium_cost_usd": premium_cost,
+            "estimated": bool(estimated),
+        }
+    )
     return Response(
         content=response_body,
         status_code=status_code,
@@ -342,16 +362,30 @@ def healthz():
     return {"ok": True, "ts": datetime.utcnow().isoformat()}
 
 
+def _safe_int(value, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_float(value, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 @app.post("/ingest")
 def ingest(payload: dict):
     source = payload.get("source", "unknown")
     model = payload.get("model", "")
-    input_tokens = int(payload.get("input_tokens", 0))
-    output_tokens = int(payload.get("output_tokens", 0))
-    requests = int(payload.get("requests", 1))
+    input_tokens = _safe_int(payload.get("input_tokens", 0))
+    output_tokens = _safe_int(payload.get("output_tokens", 0))
+    requests = max(1, _safe_int(payload.get("requests", 1), 1))
     meta = json.dumps(payload.get("meta", {}))
     premium_model = payload.get("premium_model") or payload.get("meta", {}).get("premium_model", "unknown")
-    premium_cost = float(payload.get("premium_cost_usd") or payload.get("meta", {}).get("premium_cost_usd", 0.0))
+    premium_cost = _safe_float(payload.get("premium_cost_usd") or payload.get("meta", {}).get("premium_cost_usd", 0.0))
     ts = payload.get("ts", datetime.utcnow().isoformat())
     with _db() as c:
         c.execute(
@@ -524,14 +558,10 @@ class LiveHub:
 
     def _broadcast(self, payload: dict):
         for ws in list(self._conns):
+            if ws.client_state != WebSocketState.CONNECTED:
+                continue
             try:
-                if ws.client_state == "CONNECTED":
-                    import asyncio
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        loop.create_task(ws.send_json(payload))
-                    else:
-                        asyncio.run(ws.send_json(payload))
+                asyncio.ensure_future(ws.send_json(payload))
             except Exception:
                 pass
 
@@ -557,10 +587,11 @@ async def websocket_endpoint(ws: WebSocket):
 
 
 @app.get("/api/health")
-def api_health():
+async def api_health():
+    providers = await get_providers()
     return {
         "ok": True,
         "ts": datetime.utcnow().isoformat(),
         "db": DB_PATH,
-        "providers": len(_providers),
+        "providers": len(providers),
     }

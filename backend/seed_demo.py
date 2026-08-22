@@ -1,8 +1,9 @@
 import json
+import os
 import urllib.request
 from datetime import datetime, timedelta
 
-BASE = "http://127.0.0.1:17890/ingest"
+BASE = os.environ.get("COSTFORGE_ENDPOINT", "http://127.0.0.1:17890/ingest")
 HEADERS = {"Content-Type": "application/json"}
 
 def post(data: dict):
