@@ -35,7 +35,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://<ip-address>/ || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8090/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
