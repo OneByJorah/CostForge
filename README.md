@@ -1,27 +1,18 @@
-<div align="center">
-
-![CostForge banner](docs/assets/banner.svg)
-
 # CostForge
 
-**Self-hosted cost observability for local and free-tier LLM APIs — a transparent proxy that meters every request and shows what it *would* have cost on premium models.**
+> Self-hosted cost-observability proxy for local and free-tier LLMs that meters every request and prices it against premium-model rates so you can quantify what the free traffic would have cost.
 
-<a href="https://github.com/OneByJorah/CostForge/stargazers"><img src="https://img.shields.io/github/stars/OneByJorah/CostForge?style=flat-square" alt="Stars"></a>
-<a href="https://github.com/OneByJorah/CostForge/commits"><img src="https://img.shields.io/github/last-commit/OneByJorah/CostForge?style=flat-square" alt="Last commit"></a>
-<img src="https://img.shields.io/github/license/OneByJorah/CostForge?style=flat-square" alt="License">
-<img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.12">
-<img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
-<img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose">
+[![License](https://img.shields.io/github/license/OneByJorah/CostForge?style=for-the-badge&color=FFB300&labelColor=0a0a09)](https://github.com/OneByJorah/CostForge)
+[![Top Language](https://img.shields.io/github/languages/top/OneByJorah/CostForge?style=for-the-badge&color=FFB300&labelColor=0a0a09)](https://github.com/OneByJorah/CostForge)
+[![Stars](https://img.shields.io/github/stars/OneByJorah/CostForge?style=for-the-badge&color=FFB300&labelColor=0a0a09)](https://github.com/OneByJorah/CostForge/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/OneByJorah/CostForge?style=for-the-badge&color=FFB300&labelColor=0a0a09)](https://github.com/OneByJorah/CostForge/commits)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/OneByJorah/CostForge/codeql.yml?style=for-the-badge&color=FFB300&labelColor=0a0a09&label=codeql)](https://github.com/OneByJorah/CostForge/actions/workflows/codeql.yml)
 
-</div>
-
-![CostForge dashboard](docs/assets/screenshot.png)
+![CostForge dashboard](docs/screenshots/costforge-dashboard.png)
 
 ## What This Is
 
-Running local models (Ollama, LM Studio, vLLM) or free-tier APIs (Groq, Gemini free, HuggingFace) keeps the bill at zero — but it hides the volume, token counts, and commercial value of that traffic. CostForge sits in front of those providers as a transparent HTTP reverse proxy, parses each response, and prices the usage against a premium-model catalog so you can quantify what you saved.
-
-Point a client at CostForge instead of the provider and it meters automatically. No application instrumentation and no SDK required.
+CostForge sits in front of your local models (Ollama, LM Studio, vLLM) and free-tier APIs (Groq, Gemini free, Hugging Face) as a transparent HTTP reverse proxy. Every proxied request is priced against a premium-model catalog and stored alongside token counts, so you can see the volume and commercial value of the traffic your local stack absorbed. Point a client at the proxy URL and metering kicks in automatically — no SDK, no instrumentation.
 
 ## Quick Start
 
@@ -32,21 +23,18 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Open **http://localhost:8090** for the dashboard. The API listens on **http://localhost:8000**.
-
-> [!NOTE]
-> The Docker daemon must be running before `docker compose up -d`. If you prefer the one-liner installer, `./install.sh` copies `.env` and builds both services.
+Open **http://localhost:8090** for the dashboard; the backend API listens on **http://localhost:8000**.
 
 ## Features
 
-- **Zero-friction metering proxy** — point your client at `/proxy/<provider>` and every request is logged; no code changes.
-- **Premium-equivalence costing** — maps local/free models (e.g. `llama3.1:8b` → `gpt-4o-mini`) to per-million-token rates in `pricing/catalog.json`.
-- **Live WebSocket feed** — new usage records broadcast to the dashboard instantly, with reconnect built in.
-- **Provider catalog** — Ollama, LM Studio, vLLM, Headroom, Groq, OpenRouter free, Google Gemini free, and Hugging Face in `backend/providers.json`.
-- **External ingestion** — adapters push non-proxied usage (Hermes, GitHub, Telegram, OpenRouter) into the same store via `POST /ingest`.
-- **Time-series analytics** — per-source breakdowns, token splits, sparklines, and recent-request views.
-- **SQLite with WAL** — zero external dependencies, persisted in the `costforge-data` Docker volume.
-- **Hardened deployment** — non-root backend container, healthchecks, and CodeQL analysis in CI.
+- Zero-friction metering via `/proxy/<provider>` passthrough — no client code changes.
+- Premium-equivalence costing (e.g. `llama3.1:8b` → `gpt-4o-mini`) priced from `pricing/catalog.json`.
+- Live WebSocket feed broadcasting usage records to the dashboard with reconnect.
+- Provider catalog covering Ollama, LM Studio, vLLM, Headroom, Groq, OpenRouter free, Gemini free, and Hugging Face.
+- External ingestion adapters (Hermes, GitHub, Telegram, OpenRouter) pushing non-proxied usage into the same store via `POST /ingest`.
+- Time-series analytics: per-source breakdowns, token splits, sparklines, recent-request views.
+- SQLite with WAL persisted in a Docker volume — zero external dependencies.
+- Non-root backend container with healthchecks.
 
 ## Architecture
 
@@ -61,74 +49,16 @@ Browser ──▶ nginx (port 8090) ──▶ FastAPI backend (port 8000)
                   WebSocket live feed (/ws)
 ```
 
-The frontend is a pre-built static SPA served by nginx; nginx also proxies `/api/`, `/ingest`, `/proxy/`, and `/ws` through to the backend.
+The frontend is a pre-built static SPA served by nginx, which also proxies `/api/`, `/ingest`, `/proxy/`, and `/ws` to the backend.
 
-## Configuration
+## Stack
 
-All runtime settings come from `.env` (see `.env.example`).
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `COSTFORGE_LOG` | `/app/usage.jsonl` | Path to the append-only usage log |
-| `COSTFORGE_DB` | `/app/data/costforge.db` | SQLite database file |
-| `BACKEND_PORT` | `8000` | FastAPI host port |
-| `FRONTEND_PORT` | `8090` | nginx dashboard host port |
-
-Pricing baselines live in `pricing/catalog.json` and `backend/pricing.json`; provider definitions (with premium-equivalent mappings) live in `backend/providers.json`.
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/healthz` | GET | Liveness probe for the backend |
-| `/ingest` | POST | Accept a usage record from an external adapter |
-| `/api/usage` | GET | Raw usage records (`?days=30`) |
-| `/api/summary` | GET | Per source/model rollup (`?days=7`) |
-| `/api/stats` | GET | Totals and per-provider breakdown |
-| `/api/recent` | GET | Most recent records (`?limit=50`) |
-| `/api/timeseries` | GET | Bucketed cost/requests (`?rangeMinutes=120`) |
-| `/api/providers` | GET | Configured provider catalog |
-| `/api/pricing` | GET | Premium pricing reference |
-| `/proxy/{provider_id}/{path}` | ANY | Metered passthrough to a provider |
-| `/ws` | WebSocket | Live usage feed |
-
-## Use Cases
-
-1. **Homelab operators** — justify GPU spend by quantifying the commercial value of local inference.
-2. **Platform teams** — track aggregate LLM usage across a heterogeneous provider mix from one pane.
-3. **Cost owners** — review token trends and per-model opportunity cost without opening provider billing portals.
-
-## Tech Stack
-
-FastAPI, uvicorn, httpx, SQLite (WAL), nginx, vanilla JS SPA, Docker Compose, CodeQL.
-
-## Development
-
-```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
-
-## Screenshots
-
-| Dashboard | Providers | Comparison |
-|---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Providers](docs/screenshots/providers.png) | ![Comparison](docs/screenshots/comparison.png) |
-
-More captures live in [`docs/screenshots/`](docs/screenshots/).
+Python 3.12 · FastAPI · uvicorn · httpx · SQLite (WAL) · nginx · vanilla JS SPA · Docker Compose · CodeQL.
 
 ## Contributing
 
-Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). [Open an issue](https://github.com/OneByJorah/CostForge/issues) to report a bug or request a provider adapter.
+See [CONTRIBUTING.md](CONTRIBUTING.md). [Open an issue](https://github.com/OneByJorah/CostForge/issues) to report a bug or request a provider adapter.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## Connect
-
-- [jorahone.com](https://jorahone.com)
-- [GitHub Org](https://github.com/OneByJorah)
-- [info@jorahone.com](mailto:info@jorahone.com)
