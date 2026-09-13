@@ -1,179 +1,134 @@
+<div align="center">
+
+![CostForge banner](docs/assets/banner.svg)
+
 # CostForge
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED.svg)](docker-compose.yml)
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg)](https://fastapi.tiangolo.com/)
-[![OpenRouter](https://img.shields.io/badge/OpenRouter-AI%20Gateway-7C3AED.svg)](https://openrouter.ai/)
+**Self-hosted cost observability for local and free-tier LLM APIs — a transparent proxy that meters every request and shows what it *would* have cost on premium models.**
 
-**Production-grade AI cost monitoring and optimization platform for OpenRouter.**
+<a href="https://github.com/OneByJorah/CostForge/stargazers"><img src="https://img.shields.io/github/stars/OneByJorah/CostForge?style=flat-square" alt="Stars"></a>
+<a href="https://github.com/OneByJorah/CostForge/commits"><img src="https://img.shields.io/github/last-commit/OneByJorah/CostForge?style=flat-square" alt="Last commit"></a>
+<img src="https://img.shields.io/github/license/OneByJorah/CostForge?style=flat-square" alt="License">
+<img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.12">
+<img src="https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
+<img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker Compose">
 
-CostForge tracks your AI API spend in real time, detects anomalies, and provides actionable insights to cut costs — without touching your application code.
+</div>
 
-![CostForge Dashboard](docs/screenshots/dashboard-live.png)
+![CostForge dashboard](docs/assets/screenshot.png)
 
----
+## What This Is
 
-## Features
+Running local models (Ollama, LM Studio, vLLM) or free-tier APIs (Groq, Gemini free, HuggingFace) keeps the bill at zero — but it hides the volume, token counts, and commercial value of that traffic. CostForge sits in front of those providers as a transparent HTTP reverse proxy, parses each response, and prices the usage against a premium-model catalog so you can quantify what you saved.
 
-- **Real-Time Cost Tracking** — Live per-request spend monitoring across all OpenRouter models
-- **Budget Alerts** — Configurable thresholds with Telegram and webhook notifications
-- **Anomaly Detection** — ML-based spike detection that catches runaway costs early
-- **Model Comparison** — Side-by-side latency, cost, and quality benchmarks
-- **Token Analytics** — Prompt vs completion token breakdowns with historical trends
-- **Multi-Key Support** — Manage multiple OpenRouter API keys from a single dashboard
-- **Docker-Ready** — Single `docker compose up` to run in production
-
----
+Point a client at CostForge instead of the provider and it meters automatically. No application instrumentation and no SDK required.
 
 ## Quick Start
-
-### Prerequisites
-
-- Docker Engine 24+ and Docker Compose v2
-- An [OpenRouter API key](https://openrouter.ai/keys)
-- (Optional) Telegram bot token for alert notifications
-
-### 1. Clone and configure
 
 ```bash
 git clone https://github.com/OneByJorah/CostForge.git
 cd CostForge
 cp .env.example .env
-```
-
-Edit `.env` and set your values:
-
-```env
-OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxx
-TELEGRAM_BOT_TOKEN=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
-TELEGRAM_CHAT_ID=987654321
-BUDGET_LIMIT=50.00
-BUDGET_PERIOD=daily
-```
-
-### 2. Launch
-
-```bash
 docker compose up -d
 ```
 
-The dashboard is available at **http://localhost:8090**.
+Open **http://localhost:8090** for the dashboard. The API listens on **http://localhost:8000**.
 
-### 3. Verify
+> [!NOTE]
+> The Docker daemon must be running before `docker compose up -d`. If you prefer the one-liner installer, `./install.sh` copies `.env` and builds both services.
 
-```bash
-docker compose logs -f costforge-api
-```
+## Features
 
-You should see `Uvicorn running on http://0.0.0.0:8000` confirming the API is live.
-
----
+- **Zero-friction metering proxy** — point your client at `/proxy/<provider>` and every request is logged; no code changes.
+- **Premium-equivalence costing** — maps local/free models (e.g. `llama3.1:8b` → `gpt-4o-mini`) to per-million-token rates in `pricing/catalog.json`.
+- **Live WebSocket feed** — new usage records broadcast to the dashboard instantly, with reconnect built in.
+- **Provider catalog** — Ollama, LM Studio, vLLM, Headroom, Groq, OpenRouter free, Google Gemini free, and Hugging Face in `backend/providers.json`.
+- **External ingestion** — adapters push non-proxied usage (Hermes, GitHub, Telegram, OpenRouter) into the same store via `POST /ingest`.
+- **Time-series analytics** — per-source breakdowns, token splits, sparklines, and recent-request views.
+- **SQLite with WAL** — zero external dependencies, persisted in the `costforge-data` Docker volume.
+- **Hardened deployment** — non-root backend container, healthchecks, and CodeQL analysis in CI.
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────┐
-│                 Frontend                    │
-│          (Next.js / Vercel)                 │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│              FastAPI Backend                 │
-│  ┌─────────┐  ┌──────────┐  ┌───────────┐  │
-│  │ Tracker  │  │ Anomaly  │  │  Budget   │  │
-│  │ Service  │  │ Detector │  │  Alerts   │  │
-│  └────┬─────┘  └────┬─────┘  └─────┬─────┘  │
-│       │              │              │        │
-│  ┌────▼──────────────▼──────────────▼─────┐  │
-│  │          SQLite / PostgreSQL           │  │
-│  └────────────────────────────────────────┘  │
-└──────────────────────────────────────────────┘
-                   │
-          ┌────────▼────────┐
-          │   OpenRouter    │
-          │   API Gateway   │
-          └─────────────────┘
+Browser ──▶ nginx (port 8090) ──▶ FastAPI backend (port 8000)
+                                     │
+                            ┌────────┴────────┐
+                            ▼                 ▼
+                       SQLite (usage)   JSON catalogs
+                            │            (providers, pricing)
+                            ▼
+                  WebSocket live feed (/ws)
 ```
 
----
+The frontend is a pre-built static SPA served by nginx; nginx also proxies `/api/`, `/ingest`, `/proxy/`, and `/ws` through to the backend.
 
 ## Configuration
 
-All configuration is via environment variables (see `.env.example`).
+All runtime settings come from `.env` (see `.env.example`).
 
 | Variable | Default | Description |
-|---|---|---|
-| `OPENROUTER_API_KEY` | — | Your OpenRouter API key |
-| `DATABASE_URL` | `sqlite:///./costforge.db` | Database connection string |
-| `BUDGET_LIMIT` | `50.00` | Budget threshold amount |
-| `BUDGET_PERIOD` | `daily` | `daily`, `weekly`, or `monthly` |
-| `TELEGRAM_BOT_TOKEN` | — | Telegram bot token for alerts |
-| `TELEGRAM_CHAT_ID` | — | Telegram chat ID for alerts |
-| `PORT` | `8000` | API server port |
+|----------|---------|-------------|
+| `COSTFORGE_LOG` | `/app/usage.jsonl` | Path to the append-only usage log |
+| `COSTFORGE_DB` | `/app/data/costforge.db` | SQLite database file |
+| `BACKEND_PORT` | `8000` | FastAPI host port |
+| `FRONTEND_PORT` | `8090` | nginx dashboard host port |
 
----
+Pricing baselines live in `pricing/catalog.json` and `backend/pricing.json`; provider definitions (with premium-equivalent mappings) live in `backend/providers.json`.
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/healthz` | GET | Liveness probe for the backend |
+| `/ingest` | POST | Accept a usage record from an external adapter |
+| `/api/usage` | GET | Raw usage records (`?days=30`) |
+| `/api/summary` | GET | Per source/model rollup (`?days=7`) |
+| `/api/stats` | GET | Totals and per-provider breakdown |
+| `/api/recent` | GET | Most recent records (`?limit=50`) |
+| `/api/timeseries` | GET | Bucketed cost/requests (`?rangeMinutes=120`) |
+| `/api/providers` | GET | Configured provider catalog |
+| `/api/pricing` | GET | Premium pricing reference |
+| `/proxy/{provider_id}/{path}` | ANY | Metered passthrough to a provider |
+| `/ws` | WebSocket | Live usage feed |
+
+## Use Cases
+
+1. **Homelab operators** — justify GPU spend by quantifying the commercial value of local inference.
+2. **Platform teams** — track aggregate LLM usage across a heterogeneous provider mix from one pane.
+3. **Cost owners** — review token trends and per-model opportunity cost without opening provider billing portals.
+
+## Tech Stack
+
+FastAPI, uvicorn, httpx, SQLite (WAL), nginx, vanilla JS SPA, Docker Compose, CodeQL.
 
 ## Development
 
-### Local setup (without Docker)
-
 ```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+cd backend
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn main:app --reload --port 8000
 ```
-
-### Run tests
-
-```bash
-pytest
-```
-
-### Lint
-
-```bash
-ruff check .
-```
-
----
 
 ## Screenshots
 
-| Dashboard | Cost Breakdown | Provider Comparison |
+| Dashboard | Providers | Comparison |
 |---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Breakdown](docs/screenshots/costforge-dashboard.png) | ![Providers](docs/screenshots/providers.png) |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Providers](docs/screenshots/providers.png) | ![Comparison](docs/screenshots/comparison.png) |
 
----
-
-## Roadmap
-
-- [ ] Prometheus metrics export
-- [ ] Grafana dashboard template
-- [ ] Slack/Discord alert integrations
-- [ ] CSV/PDF report generation
-- [ ] Multi-user support with API keys
-
----
+More captures live in [`docs/screenshots/`](docs/screenshots/).
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feat/amazing-feature`)
-3. Commit with conventional format (`feat:`, `fix:`, `chore:`)
-4. Push and open a PR
-
----
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). [Open an issue](https://github.com/OneByJorah/CostForge/issues) to report a bug or request a provider adapter.
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE).
 
----
+## Connect
 
-<p align="center">
-  Built with care by <a href="https://github.com/OneByJorah">OneByJorah</a>
-</p>
+- [jorahone.com](https://jorahone.com)
+- [GitHub Org](https://github.com/OneByJorah)
+- [info@jorahone.com](mailto:info@jorahone.com)
