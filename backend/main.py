@@ -3,7 +3,7 @@ import json
 import os
 import sqlite3
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import httpx
@@ -120,7 +120,7 @@ def _record_event(kind: str, detail: str):
     with _db() as c:
         c.execute(
             "insert into events(ts,kind,detail) values(?,?,?)",
-            (datetime.utcnow().isoformat(), kind, detail),
+            (datetime.now(timezone.utc).replace(tzinfo=None).isoformat(), kind, detail),
         )
 
 
@@ -320,7 +320,7 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
                 meta,premium_model,premium_cost_usd,status_code,estimated,latency_ms
             ) values(?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
-                datetime.utcnow().isoformat(),
+                datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
                 provider.get("label") or provider_id,
                 model,
                 t_in,
@@ -336,7 +336,7 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
         )
     hub.push_usage(
         {
-            "ts": datetime.utcnow().isoformat(),
+            "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             "source": provider.get("label") or provider_id,
             "model": model,
             "input_tokens": t_in,
@@ -359,7 +359,7 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
 
 @app.get("/healthz")
 def healthz():
-    return {"ok": True, "ts": datetime.utcnow().isoformat()}
+    return {"ok": True, "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat()}
 
 
 def _safe_int(value, default: int = 0) -> int:
@@ -386,7 +386,7 @@ def ingest(payload: dict):
     meta = json.dumps(payload.get("meta", {}))
     premium_model = payload.get("premium_model") or payload.get("meta", {}).get("premium_model", "unknown")
     premium_cost = _safe_float(payload.get("premium_cost_usd") or payload.get("meta", {}).get("premium_cost_usd", 0.0))
-    ts = payload.get("ts", datetime.utcnow().isoformat())
+    ts = payload.get("ts", datetime.now(timezone.utc).replace(tzinfo=None).isoformat())
     with _db() as c:
         c.execute(
             """insert into usage(
@@ -399,7 +399,7 @@ def ingest(payload: dict):
 
 @app.get("/api/usage")
 def usage(days: int = 30):
-    since = datetime.utcnow() - timedelta(days=days)
+    since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     with _db() as c:
         rows = c.execute(
             "select ts,source,model,input_tokens,output_tokens,requests,meta from usage where ts >= ? order by ts asc",
@@ -423,7 +423,7 @@ def usage(days: int = 30):
 
 @app.get("/api/summary")
 def summary(days: int = 7):
-    since = datetime.utcnow() - timedelta(days=days)
+    since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     with _db() as c:
         rows = c.execute(
             """select source,model,
@@ -591,7 +591,7 @@ async def api_health():
     providers = await get_providers()
     return {
         "ok": True,
-        "ts": datetime.utcnow().isoformat(),
+        "ts": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
         "db": DB_PATH,
         "providers": len(providers),
     }
