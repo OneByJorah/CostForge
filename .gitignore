@@ -19,6 +19,16 @@ dist/
 build/
 *.egg-info/
 *.so
+# EXCEPTION: the prebuilt static SPA is committed on purpose — it is required by
+# Dockerfile.frontend (COPY ./frontend/dist) and by the backend "/" route.
+# Without it a clean clone returns HTTP 500 on the dashboard.
+!frontend/dist/
+!frontend/dist/**
+
+# Local dev database (created at runtime; never commit)
+backend/costforge.db
+backend/costforge.db-shm
+backend/costforge.db-wal
 # Logs
 *.log
 # Reports
