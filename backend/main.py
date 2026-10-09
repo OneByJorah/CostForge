@@ -546,15 +546,16 @@ class LiveHub:
         self._conns.append(ws)
         try:
             await ws.send_json({"type": "hello", "message": "connected to costforge"})
-            await ws.send_json({"type": "usage", "record": await self._fresh_stats()})
+            # NOTE: this greeting must NOT be labelled "usage". The frontend treats
+            # any message with type=="usage" and a record as a metered request and
+            # increments its counters, which fabricated a phantom request with
+            # source=undefined on every page load. Send a distinct type.
+            await ws.send_json({"type": "connected", "ts": self._now_ms()})
         except Exception:
             pass
 
     def _now_ms(self) -> int:
         return int(time.time() * 1000)
-
-    async def _fresh_stats(self) -> dict:
-        return {"ts": int(time.time() * 1000)}
 
     def _broadcast(self, payload: dict):
         for ws in list(self._conns):
