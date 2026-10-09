@@ -7,6 +7,11 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 
 # Install build dependencies
+# This build host allows HTTPS but blocks plain-HTTP egress, and the Debian image
+# ships http:// sources. Rewrite them to https so apt works here and anywhere.
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' \
+    /etc/apt/sources.list.d/debian.sources 2>/dev/null || true
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
@@ -21,6 +26,11 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Runtime dependencies only
+# This build host allows HTTPS but blocks plain-HTTP egress, and the Debian image
+# ships http:// sources. Rewrite them to https so apt works here and anywhere.
+RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.debian.org|https://security.debian.org|g' \
+    /etc/apt/sources.list.d/debian.sources 2>/dev/null || true
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*

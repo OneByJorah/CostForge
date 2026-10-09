@@ -7,7 +7,7 @@ services:
     image: jorahone/costforge-backend:latest
     container_name: costforge-backend
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       COSTFORGE_LOG: /app/usage.jsonl
       COSTFORGE_DB: /app/data/costforge.db
@@ -29,13 +29,15 @@ services:
     image: jorahone/costforge-frontend:latest
     container_name: costforge-frontend
     ports:
-      - "8090:80"
+      - "127.0.0.1:8090:8080"
     depends_on:
       costforge-backend:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8090/ || exit 1"]
+      # nginx listens on 8080 *inside* the container (unprivileged port, non-root
+      # user). 8090 is only the host-side mapping, so probing it here never worked.
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8080/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
