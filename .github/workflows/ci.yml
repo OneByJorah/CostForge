@@ -18,3 +18,5 @@ jobs:
     with:
       # Add your test command, for example: "npm test --prefix app"
       test-command: ""
+      dockerfile: Dockerfile.frontend
+      compose-file: docker-compose.yml

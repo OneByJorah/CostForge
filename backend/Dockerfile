@@ -13,7 +13,7 @@ RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.
     /etc/apt/sources.list.d/debian.sources 2>/dev/null || true
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
+    gcc=* \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for layer caching
@@ -32,7 +32,7 @@ RUN sed -i 's|http://deb.debian.org|https://deb.debian.org|g; s|http://security.
     /etc/apt/sources.list.d/debian.sources 2>/dev/null || true
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+    curl=* \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed packages from builder
@@ -52,12 +52,12 @@ RUN addgroup --system --gid 1001 costforge && \
     mkdir -p /app/data && \
     chown -R costforge:costforge /app
 
-USER costforge
+USER 1001
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=15s \
-    CMD curl -sf http://localhost:8000/healthz || exit 1
+    CMD ["curl", "-sf", "http://localhost:8000/healthz"]
 
 LABEL org.opencontainers.image.title="CostForge Backend" \
       org.opencontainers.image.description="FastAPI backend for CostForge API cost tracking" \
