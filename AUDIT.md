@@ -1,4 +1,6 @@
-# CostForge — Audit (2026-10-08, Stage 1-2)
+# pricelio — Audit (2026-10-08, Stage 1-2)
+
+*Formerly CostForge.*
 
 Baseline recorded before any change. Every claim below was produced by a command run
 locally against a clean clone; nothing here is inferred from reading alone.
@@ -34,7 +36,7 @@ README claims (`7532072 "docs: trending README, real screenshots…"`) deleted
 Two shipped files depend on a path that is not in the repo:
 
 - `Dockerfile.frontend` → `COPY ./frontend/dist /usr/share/nginx/html`
-- `docker-compose.yml` → `costforge-frontend` service
+- `docker-compose.yml` → `pricelio-frontend` service
 
 So both the documented local quick start (`docker compose up -d`) and the plain
 `uvicorn` route were broken from a fresh clone.
@@ -53,7 +55,7 @@ genuine build output.
 
 ### A3 — Runtime database artifacts unignored (fixed)
 
-`backend/costforge.db`, `-shm`, `-wal` are created at runtime and were untracked and
+`backend/pricelio.db`, `-shm`, `-wal` are created at runtime and were untracked and
 unignored — easy to commit by accident. Added to `.gitignore`.
 
 ### A4 — No tests (delegated)
@@ -68,5 +70,5 @@ usage-parsing helpers to OpenCode (free model). Status recorded in the daily not
 - **No real proxied traffic** → the metering path (`/proxy/{provider}/{path}`) and
   WebSocket feed were not exercised end-to-end; `/api/*` reads were verified against an
   empty store.
-- Screenshots of the CostForge dashboard have **not** been captured yet (the existing
+- Screenshots of the pricelio dashboard have **not** been captured yet (the existing
   `docs/screenshots/*.png` are pre-existing and were not re-verified in this run).

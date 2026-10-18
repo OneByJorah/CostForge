@@ -21,7 +21,9 @@ concurrency:
 jobs:
   screenshots:
     uses: ./.github/workflows/reusable-screenshots.yml
-    # To use your self-hosted runner (trusted events only):
-    # with:
-    #   runner: self-hosted
-    #   install-deps: false
+    with:
+      base-url: http://127.0.0.1:8090
+      health-url: http://127.0.0.1:8090/healthz
+      # To use your self-hosted runner (trusted events only):
+      #   runner: self-hosted
+      #   install-deps: false

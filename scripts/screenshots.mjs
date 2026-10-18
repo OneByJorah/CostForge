@@ -1,5 +1,5 @@
 // Captures real screenshots of the running demo stack with Playwright.
-// Usage (stack already running):  BASE_URL=http://127.0.0.1:8080 node scripts/screenshots.mjs
+// Usage (stack already running):  BASE_URL=http://127.0.0.1:8090 node scripts/screenshots.mjs
 // Requires: npm install --no-save playwright && npx playwright install chromium
 //
 // Safety: every page is scanned for private IPs, tailnet IPs, emails, and forbidden words
@@ -11,13 +11,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const BASE = process.env.BASE_URL || "http://127.0.0.1:8080";
+const BASE = process.env.BASE_URL || "http://127.0.0.1:8090";
 const OUT = process.env.OUT_DIR || "docs/screenshots";
 const RECORD = process.env.RECORD === "1";
 
-// Edit this list per project: one entry per screen worth showing.
+// pricelio is a single-page dashboard; capture desktop and mobile viewports.
 const PAGES = [
-  { name: "dashboard", path: "/", waitFor: "#app-ready" },
+  { name: "dashboard", path: "/", waitFor: "#app-ready", viewport: { width: 1440, height: 900 } },
+  { name: "dashboard-mobile", path: "/", waitFor: "#app-ready", viewport: { width: 390, height: 844 } },
 ];
 
 const FORBIDDEN = [
@@ -42,15 +43,15 @@ const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: process.env.NO_SANDBOX === "1" ? ["--no-sandbox"] : [],
 });
-const context = await browser.newContext({
-  viewport: { width: 1440, height: 900 },
-  deviceScaleFactor: 2,
-  colorScheme: "dark",
-  ...(RECORD ? { recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } } : {}),
-});
 
 let failed = false;
 for (const p of PAGES) {
+  const context = await browser.newContext({
+    viewport: p.viewport || { width: 1440, height: 900 },
+    deviceScaleFactor: 2,
+    colorScheme: "dark",
+    ...(RECORD ? { recordVideo: { dir: videoDir, size: { width: 1280, height: 720 } } } : {}),
+  });
   const page = await context.newPage();
   await page.goto(new URL(p.path, BASE).toString(), { waitUntil: "networkidle" });
   if (p.waitFor) await page.waitForSelector(p.waitFor, { timeout: 15000 });
@@ -61,6 +62,7 @@ for (const p of PAGES) {
     console.error(`SCRUB FAIL on ${p.name}: found ${hits.join(", ")}. No screenshot written.`);
     failed = true;
     await page.close();
+    await context.close();
     continue;
   }
 
@@ -68,9 +70,9 @@ for (const p of PAGES) {
   await page.screenshot({ path: file, fullPage: true });
   console.log(`saved ${file}`);
   await page.close();
+  await context.close();
 }
 
-await context.close();
 await browser.close();
 
 if (RECORD && !failed) {

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SERVER="${1:-localhost}"
-printf "CostForge Healthcheck\nTarget: %s\n\n" "$SERVER"
+printf "pricelio Healthcheck\nTarget: %s\n\n" "$SERVER"
 
 check_service() {
     local name="$1"
@@ -27,11 +27,11 @@ check_service() {
 FAILED=0
 
 echo "Backend:"
-check_service "CostForge Backend" "http://$SERVER:8000/healthz" "ok" || FAILED=1
+check_service "pricelio Backend" "http://$SERVER:8000/healthz" "ok" || FAILED=1
 
 echo ""
 echo "Frontend:"
-check_service "CostForge Frontend" "http://$SERVER:8090/" "CostForge" || FAILED=1
+check_service "pricelio Frontend" "http://$SERVER:8090/" "pricelio" || FAILED=1
 
 echo ""
 if [[ $FAILED -eq 0 ]]; then

@@ -1,6 +1,6 @@
 # INTENT.md — J1-PIPELINE Phase -1 (ORACLE)
 
-**Repository:** `OneByJorah/CostForge`
+**Repository:** `OneByJorah/pricelio`
 **Analysis Date:** 2026-07-05
 **Analyst:** J1-PIPELINE ORACLE (read-only)
 **Status:** Intent Reconstructed
@@ -11,7 +11,7 @@
 
 ### Technical Role
 
-CostForge is a **self-hosted API cost estimation and metering dashboard** that operates as a transparent HTTP reverse proxy. It sits between client applications and LLM/API providers, intercepting every request to:
+pricelio is a **self-hosted API cost estimation and metering dashboard** that operates as a transparent HTTP reverse proxy. It sits between client applications and LLM/API providers, intercepting every request to:
 
 1. **Proxy traffic** to configured providers — local (Ollama, LM Studio, vLLM, Headroom) and cloud-free (Groq, OpenRouter free models, Gemini free tier, HuggingFace Inference)
 2. **Meter token usage** by parsing provider-specific response formats (OpenAI-compatible, Ollama, generic)
@@ -23,7 +23,7 @@ CostForge is a **self-hosted API cost estimation and metering dashboard** that o
 
 ### Operational Role
 
-CostForge is the **cost observability layer** for the JorahOne AI infrastructure. It answers the question: *"How much money am I saving by running local models or using free-tier APIs instead of paying for premium cloud APIs?"* It runs as a Docker Compose stack (FastAPI backend + nginx frontend) with health checks, healthz endpoint, and automatic restart.
+pricelio is the **cost observability layer** for the JorahOne AI infrastructure. It answers the question: *"How much money am I saving by running local models or using free-tier APIs instead of paying for premium cloud APIs?"* It runs as a Docker Compose stack (FastAPI backend + nginx frontend) with health checks, healthz endpoint, and automatic restart.
 
 ### Architecture
 
@@ -84,11 +84,11 @@ The JorahOne ecosystem runs multiple local LLM providers (Ollama, vLLM, Headroom
 - Track aggregate usage across all providers from a single pane of glass
 - Provide cost transparency to stakeholders without exposing API keys or cloud billing portals
 
-The initial commit (`5fa1e7c` — "chore: initial CostForge scaffold with FastAPI backend + dashboard") established the core proxy + dashboard pattern from day one. CostForge was built to answer these questions with a single `docker compose up`.
+The initial commit (`5fa1e7c` — "chore: initial CostForge scaffold with FastAPI backend + dashboard") established the core proxy + dashboard pattern from day one. pricelio was built to answer these questions with a single `docker compose up`.
 
 ### Ecosystem Fit
 
-CostForge is the **cost observability pillar** of the JorahOne infrastructure stack. It integrates with:
+pricelio is the **cost observability pillar** of the JorahOne infrastructure stack. It integrates with:
 
 - **Hermes Agent** — adapter normalizes Hermes usage events for cost tracking
 - **GitHub API** — adapter meters GitHub API call volume (issues, repos, workflows)
@@ -117,9 +117,9 @@ Evidence:
 | Code of Conduct | ✅ `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1) |
 | Contributing guide | ✅ `CONTRIBUTING.md` with issue/PR labels |
 | MIT License | ✅ `LICENSE` |
-| Persistent storage | ✅ SQLite with WAL mode, Docker volume (`costforge-data`) |
+| Persistent storage | ✅ SQLite with WAL mode, Docker volume (`pricelio-data`) |
 | Graceful degradation | ✅ Proxy errors return 502 with diagnostic message |
-| Non-root container | ✅ `USER costforge` in Dockerfile (UID 1000) |
+| Non-root container | ✅ `USER pricelio` in Dockerfile (UID 1000) |
 | CORS configured | ✅ Wide-open CORS for proxy flexibility |
 | Security audits in git history | ✅ Two commits: `401570c` (redact exposed Tailscale IPs) and `d2071d4` (sanitize email references) |
 | Issue/PR templates | ✅ Bug report + feature request + PR template in `.github/` |
@@ -129,17 +129,17 @@ Evidence:
 
 ## Key Architectural Decisions
 
-1. **Proxy-based metering over agent-side instrumentation** — Rather than modifying every client application to report usage, CostForge intercepts traffic at the proxy layer. Clients just change their base URL. This is the single most important design decision — it makes adoption zero-friction.
+1. **Proxy-based metering over agent-side instrumentation** — Rather than modifying every client application to report usage, pricelio intercepts traffic at the proxy layer. Clients just change their base URL. This is the single most important design decision — it makes adoption zero-friction.
 
 2. **SQLite over PostgreSQL** — Zero external dependencies. The data volume (token usage records) is modest enough that SQLite with WAL mode handles it comfortably. No separate database server to manage.
 
-3. **Premium equivalence mapping** — Rather than trying to compute "real" costs for free/local models (which are $0 or sunk hardware cost), CostForge shows what the same usage *would have cost* on comparable premium APIs. This measures opportunity cost, not actual spend — the key insight that makes the tool valuable.
+3. **Premium equivalence mapping** — Rather than trying to compute "real" costs for free/local models (which are $0 or sunk hardware cost), pricelio shows what the same usage *would have cost* on comparable premium APIs. This measures opportunity cost, not actual spend — the key insight that makes the tool valuable.
 
 4. **Response format parsers** — Three parsers (OpenAI, Ollama, generic) handle the major LLM API formats. The generic parser falls back to token estimation from text length when the response doesn't include a usage field. This enables broad provider coverage without per-provider integration work.
 
 5. **WebSocket live feed** — The `LiveHub` class broadcasts new usage records to all connected dashboard clients in real time, making the dashboard feel alive without polling. The dashboard reconnects automatically on disconnect.
 
-6. **Adapters for external ingestion** — The `/ingest` endpoint and adapter modules allow non-proxied services (Hermes, GitHub, Telegram) to push usage data into CostForge, making it a universal cost aggregator beyond just proxied traffic.
+6. **Adapters for external ingestion** — The `/ingest` endpoint and adapter modules allow non-proxied services (Hermes, GitHub, Telegram) to push usage data into pricelio, making it a universal cost aggregator beyond just proxied traffic.
 
 7. **Single-file SPA frontend** — The entire dashboard is a single `index.html` with inline CSS and JavaScript. No build step, no npm, no framework. This keeps deployment trivial and eliminates frontend dependencies.
 
@@ -148,7 +148,7 @@ Evidence:
 ## Repository Structure
 
 ```text
-CostForge/
+pricelio/
 ├── backend/
 │   ├── main.py              # FastAPI app: proxy, API, WebSocket, DB (566 lines)
 │   ├── providers.json       # Provider definitions (Ollama, Groq, etc.)
@@ -215,4 +215,4 @@ CostForge/
 
 ### Classification Evidence Summary
 
-CostForge qualifies as **Production** based on: Docker Compose deployment with health checks, CI/CD (CodeQL), Dependabot, security policy, CoC, contributing guide, MIT license, persistent storage, non-root container, graceful degradation, security audit history, and issue/PR templates. The only gap is the missing Docker daemon prerequisite documentation in the README.
+pricelio qualifies as **Production** based on: Docker Compose deployment with health checks, CI/CD (CodeQL), Dependabot, security policy, CoC, contributing guide, MIT license, persistent storage, non-root container, graceful degradation, security audit history, and issue/PR templates. The only gap is the missing Docker daemon prerequisite documentation in the README.

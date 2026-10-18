@@ -1,4 +1,5 @@
-[CostForge deploy attempt]
+[pricelio deploy attempt]
+[formerly CostForge]
 - docker compose config -> OK
 - docker compose build -> FAILED: "Cannot connect to the Docker daemon at unix:///var/run/docker.sock"
 Root cause: Docker daemon is not running on this host.

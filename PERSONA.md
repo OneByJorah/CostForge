@@ -1,4 +1,6 @@
-# CostForge — Persona
+# pricelio — Persona
+
+*Formerly CostForge.*
 
 Archetype:        The Penny Auditor
 

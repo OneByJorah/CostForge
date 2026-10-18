@@ -1,4 +1,6 @@
-# AUDIT_REPORT — CostForge
+# AUDIT_REPORT — pricelio
+
+*Formerly CostForge.*
 
 **Date:** 2026-07-05
 **Score:** 68/100 — DEGRADED
