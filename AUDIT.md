@@ -6,7 +6,7 @@ locally against a clean clone; nothing here is inferred from reading alone.
 ## Baseline
 
 | Check | Result |
-|---|---|
+| --- | --- |
 | Clone | clean, `main`, working tree clean at start |
 | Stack | FastAPI 0.115.0 + uvicorn 0.32.0 + httpx 0.28.1, SQLite (WAL), single `backend/main.py` (597 lines) |
 | Dependency count | 3 runtime (genuinely zero-dependency beyond FastAPI stack) |
@@ -22,6 +22,7 @@ locally against a clean clone; nothing here is inferred from reading alone.
 ## Findings
 
 ### A1 — Documented dashboard 500s on a clean clone (fixed)
+
 `backend/main.py:533-535` serves the SPA by reading
 `APP_DIR.parent / "frontend" / "dist" / "index.html"`, which raises `FileNotFoundError`
 when `frontend/` is absent → HTTP 500 on `/`.
@@ -31,6 +32,7 @@ README claims (`7532072 "docs: trending README, real screenshots…"`) deleted
 `frontend/dist/index.html`; it was tracked at `9717a4c` and earlier.
 
 Two shipped files depend on a path that is not in the repo:
+
 - `Dockerfile.frontend` → `COPY ./frontend/dist /usr/share/nginx/html`
 - `docker-compose.yml` → `costforge-frontend` service
 
@@ -43,20 +45,24 @@ and the page's fetch calls target only endpoints that exist
 (`/api/pricing`, `/api/providers`, `/api/recent`, `/api/stats`, `/api/timeseries`).
 
 ### A2 — `.gitignore` silently dropped the restored file (fixed)
+
 `.gitignore` line 18 ignored `dist/`. A restored frontend would therefore never be
 committed, re-breaking A1 on the next clone. Added an explicit
 `!frontend/dist/` + `!frontend/dist/**` exception, keeping `dist/` ignored for any
 genuine build output.
 
 ### A3 — Runtime database artifacts unignored (fixed)
+
 `backend/costforge.db`, `-shm`, `-wal` are created at runtime and were untracked and
 unignored — easy to commit by accident. Added to `.gitignore`.
 
 ### A4 — No tests (delegated)
+
 Zero automated tests existed. Delegated a real pytest suite for the API surface and the
 usage-parsing helpers to OpenCode (free model). Status recorded in the daily note.
 
 ## Not verified (honest gaps)
+
 - **No Docker on this host** → `Dockerfile.frontend`, `docker-compose.yml` and the
   container install path were **not** exercised. Only the direct `uvicorn` path was.
 - **No real proxied traffic** → the metering path (`/proxy/{provider}/{path}`) and

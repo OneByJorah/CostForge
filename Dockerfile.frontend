@@ -17,12 +17,12 @@ RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx \
     && touch /var/run/nginx.pid \
     && chown nginx:nginx /var/run/nginx.pid
 
-USER nginx
+USER 101
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
-    CMD wget --spider -q http://127.0.0.1:8080/ || exit 1
+    CMD ["wget", "--spider", "-q", "http://127.0.0.1:8080/"]
 
 LABEL org.opencontainers.image.title="CostForge Frontend" \
       org.opencontainers.image.description="nginx serving CostForge SPA" \

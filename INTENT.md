@@ -27,7 +27,7 @@ CostForge is the **cost observability layer** for the JorahOne AI infrastructure
 
 ### Architecture
 
-```
+```text
 Browser ──▶ Nginx (port 8090) ──▶ FastAPI Backend (port 8000)
                                        │
                               ┌────────┴────────┐
@@ -41,7 +41,7 @@ Browser ──▶ Nginx (port 8090) ──▶ FastAPI Backend (port 8000)
 ### Key Components
 
 | Component | Technology | Role |
-|-----------|-----------|------|
+| --- | --- | --- |
 | Backend | FastAPI + uvicorn | Proxy, metering, API, WebSocket hub |
 | Database | SQLite (WAL) | Usage records, event log |
 | Frontend | Vanilla HTML/CSS/JS SPA | Dark dashboard, live updates |
@@ -66,7 +66,7 @@ Developers and teams running local LLMs (Ollama, LM Studio, vLLM) or using free-
 ### Why Existing Tools Were Insufficient
 
 | Tool | Gap |
-|------|-----|
+| --- | --- |
 | Cloud provider dashboards (OpenAI, Anthropic, Google) | Only show what you *actually paid* — nothing for local/free usage |
 | OpenRouter billing | Only tracks paid usage through their platform |
 | Ollama logs | Raw text logs, no aggregation, no cost comparison |
@@ -103,12 +103,12 @@ It is designed to be the single source of truth for "what is our AI infrastructu
 
 ## Operational Classification
 
-**Classification: PRODUCTION**
+### Classification: PRODUCTION
 
 Evidence:
 
 | Criterion | Status |
-|-----------|--------|
+| --- | --- |
 | Docker Compose deployment | ✅ `docker-compose.yml` with health checks, restart policy, persistent volume |
 | Health check endpoint | ✅ `/healthz` + shell healthcheck script (`scripts/healthcheck.sh`) |
 | CI/CD | ✅ CodeQL analysis on push/PR/schedule (`.github/workflows/codeql.yml`) |
@@ -147,7 +147,7 @@ Evidence:
 
 ## Repository Structure
 
-```
+```text
 CostForge/
 ├── backend/
 │   ├── main.py              # FastAPI app: proxy, API, WebSocket, DB (566 lines)
