@@ -1,18 +1,18 @@
 services:
-  # --- CostForge Backend ---
-  costforge-backend:
+  # --- pricelio Backend ---
+  pricelio-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: jorahone/costforge-backend:latest
-    container_name: costforge-backend
+    image: ghcr.io/onebyjorah/pricelio-backend:latest
+    container_name: pricelio-backend
     ports:
       - "127.0.0.1:8000:8000"
     environment:
       COSTFORGE_LOG: /app/usage.jsonl
-      COSTFORGE_DB: /app/data/costforge.db
+      COSTFORGE_DB: /app/data/pricelio.db
     volumes:
-      - costforge-data:/app/data
+      - pricelio-data:/app/data
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8000/healthz || exit 1"]
       interval: 30s
@@ -21,17 +21,17 @@ services:
       start_period: 15s
     restart: unless-stopped
 
-  # --- CostForge Frontend ---
-  costforge-frontend:
+  # --- pricelio Frontend ---
+  pricelio-frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    image: jorahone/costforge-frontend:latest
-    container_name: costforge-frontend
+    image: ghcr.io/onebyjorah/pricelio-frontend:latest
+    container_name: pricelio-frontend
     ports:
       - "127.0.0.1:8090:8080"
     depends_on:
-      costforge-backend:
+      pricelio-backend:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -44,5 +44,5 @@ services:
       start_period: 10s
 
 volumes:
-  costforge-data:
-    name: costforge-data
+  pricelio-data:
+    name: pricelio-data

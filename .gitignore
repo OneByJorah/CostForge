@@ -26,6 +26,9 @@ build/
 !frontend/dist/**
 
 # Local dev database (created at runtime; never commit)
+backend/pricelio.db
+backend/pricelio.db-shm
+backend/pricelio.db-wal
 backend/costforge.db
 backend/costforge.db-shm
 backend/costforge.db-wal

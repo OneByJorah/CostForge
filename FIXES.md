@@ -1,4 +1,6 @@
-# CostForge — Fixes and Enhancements
+# pricelio — Fixes and Enhancements
+
+*Formerly CostForge.*
 
 ## Changes Made
 

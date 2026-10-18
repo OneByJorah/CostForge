@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
   const page = await browser.newPage();
   await page.goto('http://localhost:8090/');
   await page.waitForTimeout(3000);
-  await page.screenshot({ path: '/home/j1coder/costforge-screenshot.png', fullPage: true });
+  await page.screenshot({ path: 'docs/screenshots/pricelio-screenshot.png', fullPage: true });
   await browser.close();
   console.log('Screenshot saved!');
 })();

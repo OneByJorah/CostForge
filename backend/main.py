@@ -13,10 +13,10 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from starlette.websockets import WebSocket, WebSocketState
 
 APP_DIR = Path(__file__).parent
-DB_PATH = os.getenv("COSTFORGE_DB", str(APP_DIR / "costforge.db"))
+DB_PATH = os.getenv("COSTFORGE_DB", str(APP_DIR / "pricelio.db"))
 LOG_PATH = os.getenv("COSTFORGE_LOG", str(APP_DIR / "usage.jsonl"))
 
-app = FastAPI(title="CostForge")
+app = FastAPI(title="pricelio")
 
 app.add_middleware(
     CORSMiddleware,
@@ -287,7 +287,7 @@ async def proxy_handler(request: Request, provider_id: str, path: str):
     except Exception as exc:
         status_code = 502
         headers_out["content-type"] = "text/plain"
-        response_body = f"CostForge proxy error: {exc}".encode()
+        response_body = f"pricelio proxy error: {exc}".encode()
     elapsed_ms = int((time.time() - start) * 1000)
     try:
         preset = provider.get("responseFormat", "generic")
@@ -545,7 +545,7 @@ class LiveHub:
     async def register(self, ws: WebSocket):
         self._conns.append(ws)
         try:
-            await ws.send_json({"type": "hello", "message": "connected to costforge"})
+            await ws.send_json({"type": "hello", "message": "connected to pricelio"})
             # NOTE: this greeting must NOT be labelled "usage". The frontend treats
             # any message with type=="usage" and a record as a metered request and
             # increments its counters, which fabricated a phantom request with

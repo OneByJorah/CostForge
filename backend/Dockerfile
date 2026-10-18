@@ -1,6 +1,6 @@
 # =============================================================================
-# CostForge Backend — FastAPI + Uvicorn
-# Tag convention: jorahone/costforge-backend:latest
+# pricelio Backend — FastAPI + Uvicorn
+# Tag convention: ghcr.io/onebyjorah/pricelio-backend:latest
 # =============================================================================
 FROM python:3.12-slim AS builder
 
@@ -47,10 +47,10 @@ COPY providers.json ./
 COPY pricing.json ./
 
 # Create non-root user
-RUN addgroup --system --gid 1001 costforge && \
-    adduser --system --uid 1001 --ingroup costforge --no-create-home costforge && \
+RUN addgroup --system --gid 1001 pricelio && \
+    adduser --system --uid 1001 --ingroup pricelio --no-create-home pricelio && \
     mkdir -p /app/data && \
-    chown -R costforge:costforge /app
+    chown -R pricelio:pricelio /app
 
 USER 1001
 
@@ -59,8 +59,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=15s \
     CMD ["curl", "-sf", "http://localhost:8000/healthz"]
 
-LABEL org.opencontainers.image.title="CostForge Backend" \
-      org.opencontainers.image.description="FastAPI backend for CostForge API cost tracking" \
+LABEL org.opencontainers.image.title="pricelio Backend" \
+      org.opencontainers.image.description="FastAPI backend for pricelio API cost tracking" \
       org.opencontainers.image.vendor="JorahOne" \
       org.opencontainers.image.version="1.0.0"
 

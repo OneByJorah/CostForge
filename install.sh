@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-echo "=== Installing CostForge ==="
+echo "=== Installing pricelio ==="
 
 if ! command -v docker &> /dev/null; then
     echo "Docker is required but not installed. Please install Docker first."
@@ -25,11 +25,11 @@ if [ ! -f .env ]; then
     fi
 fi
 
-echo "Building and starting CostForge on port 8090..."
+echo "Building and starting pricelio on port 8090..."
 if docker compose version &> /dev/null; then
     docker compose up --build -d
 else
     docker-compose up --build -d
 fi
 
-echo "CostForge installed. Access: http://localhost:8090"
+echo "pricelio installed. Access: http://localhost:8090"

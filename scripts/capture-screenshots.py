@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture CostForge dashboard screenshots using Playwright.
+"""Capture pricelio dashboard screenshots using Playwright.
 
 Usage:
     python scripts/capture-screenshots.py
@@ -24,7 +24,7 @@ SCREENSHOT_DIR = os.environ.get("SCREENSHOT_DIR", "docs/screenshots")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 def capture_screenshots():
-    """Capture CostForge dashboard screenshots."""
+    """Capture pricelio dashboard screenshots."""
     screenshots = [
         {"path": f"{SCREENSHOT_DIR}/dashboard.png", "scroll": 0, "name": "dashboard"},
         {"path": f"{SCREENSHOT_DIR}/comparison.png", "scroll": 500, "name": "comparison"},

@@ -1,7 +1,7 @@
-"""Pytest configuration for the CostForge backend.
+"""Pytest configuration for the pricelio backend.
 
 Isolates the SQLite database per test session before `main` is imported, so the
-real `backend/costforge.db` is never touched by a test run.
+real `backend/pricelio.db` is never touched by a test run.
 """
 import os
 import sys
@@ -20,8 +20,8 @@ def pytest_configure():
         sys.path.insert(0, str(BACKEND_DIR))
     # main.py resolves its database at import time, so the env var must be set
     # before the first `import main`. Use a temp directory pytest owns.
-    db_dir = tempfile.mkdtemp(prefix="costforge-tests-")
-    os.environ["COSTFORGE_DB"] = os.path.join(db_dir, "test_costforge.db")
+    db_dir = tempfile.mkdtemp(prefix="pricelio-tests-")
+    os.environ["COSTFORGE_DB"] = os.path.join(db_dir, "test_pricelio.db")
 
 
 @pytest.fixture()
