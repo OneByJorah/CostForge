@@ -1,107 +1,110 @@
 <div align="center">
 
-![CostForge banner](docs/assets/banner.svg)
+![pricelio banner](docs/assets/banner.svg)
 
-# CostForge
+# pricelio
+
+*Formerly CostForge — self-hosted API cost estimation and metering dashboard.*
 
 Cloud cost analysis and optimization dashboard — track spending, identify waste, and optimize cloud bills across providers.
 
-[![GitHub release](https://img.shields.io/github/v/release/OneByJorah/CostForge?color=fb923c&label=release&logo=github)](https://github.com/OneByJorah/CostForge/releases)
-[![PyPI version](https://img.shields.io/pypi/v/costforge?color=fb923c&label=pip&logo=pypi)](https://pypi.org/project/costforge/)
+[![GitHub release](https://img.shields.io/github/v/release/OneByJorah/pricelio?color=fb923c&label=release&logo=github)](https://github.com/OneByJorah/pricelio/releases)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?color=FFB300&logo=open-source-initiative&logoColor=FFB300)](https://opensource.org/licenses/MIT)
 
 </div>
 
-![CostForge screenshot](docs/assets/screenshot.png)
+![pricelio dashboard screenshot](docs/screenshots/dashboard.png)
 
 ## What This Is
 
-Cloud cost analysis and optimization dashboard — track spending, identify waste, and optimize cloud bills across providers.
+pricelio is a self-hosted cost observability layer for API and LLM usage. Run it as a transparent HTTP reverse proxy or push usage events to the `/ingest` endpoint. The dashboard shows what the same usage would have cost on premium APIs, making it easy to measure savings from local models, free tiers, and self-hosted stacks.
 
-Built for operators who want a self-hosted, Docker-deployed solution they control.
+Built for operators who want a Docker-deployed dashboard they control.
 
 ## Quick Start
 
-### pip
-
 ```bash
-pip install costforge
+git clone https://github.com/OneByJorah/pricelio.git
+cd pricelio
+cp .env.example .env
+docker compose up -d --build
 ```
 
-### Docker (recommended)
+Open the dashboard at `http://127.0.0.1:8090` and verify health:
 
 ```bash
-git clone https://github.com/OneByJorah/CostForge.git
-cd CostForge
-docker compose up -d
-```
-
-### From Source
-
-```bash
-git clone https://github.com/OneByJorah/CostForge.git
-cd CostForge
-pip install -r requirements.txt
-python3 app.py
+curl http://127.0.0.1:8000/healthz
 ```
 
 ## Install
 
-### pip
+### Docker (recommended)
 
 ```bash
-pip install costforge
+git clone https://github.com/OneByJorah/pricelio.git
+cd pricelio
+docker compose up -d --build
 ```
 
-### Docker
-
-```bash
-git clone https://github.com/OneByJorah/CostForge.git
-cd CostForge
-docker compose up -d
-```
+The compose stack binds the backend to `127.0.0.1:8000` and the frontend to `127.0.0.1:8090`.
 
 ### From Source
 
 ```bash
-git clone https://github.com/OneByJorah/CostForge.git
-cd CostForge
+git clone https://github.com/OneByJorah/pricelio.git
+cd pricelio
+cd backend
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python3 app.py
+python main.py
 ```
+
+The source path is useful for local development; Docker is recommended for production.
 
 ## Features
 
 - **Self-hosted** — no cloud dependencies, run on your own hardware
 - **Docker Compose** — full stack deployment with one command
-- **pip package** — install via PyPI
-- **Dark theme** — operational, clean UI
-
-- **Multi-cloud support** — AWS, GCP, Azure cost tracking
-- **Spending analysis** — breakdowns by service, team, and project
-- **Waste identification** — find unused resources and over-provisioning
-- **Optimization suggestions** — actionable cost-saving recommendations
-- **Docker Compose deployment** — self-hosted dashboard
-- **Dark theme** — financial, data-focused UI
+- **Transparent proxy metering** — route traffic through `/proxy/{provider}/*` and meter automatically
+- **Event ingestion** — push usage from Hermes, GitHub, Telegram, or any adapter via `/ingest`
+- **Premium-equivalent costs** — see what usage would cost on paid APIs as a savings benchmark
+- **Live dashboard** — WebSocket feed updates the ledger and sparkline in real time
+- **Dark theme** — operational, data-focused UI
 
 ## Tech Stack
 
-- **Backend** — Python 3.11+, pydantic, pyyaml
-- **Deployment** — Docker Compose, pip install
-- **Configuration** — environment variables, config files
+- **Backend** — Python 3.11+, FastAPI, Uvicorn, SQLite with WAL mode
+- **Frontend** — nginx serving a pre-built static SPA
+- **Deployment** — Docker Compose
+- **Configuration** — environment variables via `.env`
 
-## Package Badges
+## Screenshots
 
-[![GitHub release](https://img.shields.io/github/v/release/OneByJorah/CostForge?color=fb923c&label=release&logo=github)](https://github.com/OneByJorah/CostForge/releases)
-[![PyPI version](https://img.shields.io/pypi/v/costforge?color=fb923c&label=pip&logo=pypi)](https://pypi.org/project/costforge/)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?color=FFB300&logo=open-source-initiative&logoColor=FFB300)](https://opensource.org/licenses/MIT)
+Real screenshots from the local demo stack are committed to `docs/screenshots/`.
+
+| Dashboard |
+| --- |
+| ![Dashboard](docs/screenshots/dashboard.png) |
+
+## Health Checks
+
+- Backend: `GET http://127.0.0.1:8000/healthz` → `200`
+- Frontend (proxied): `GET http://127.0.0.1:8090/healthz` → `200`
+
+## Image
+
+The prebuilt container image is published to GHCR:
+
+```text
+ghcr.io/onebyjorah/pricelio:latest
+```
 
 ## Contributing
 
-Contributions are welcome. [Open an issue](https://github.com/OneByJorah/CostForge/issues) to report a bug or request a feature.
+Contributions are welcome. [Open an issue](https://github.com/OneByJorah/pricelio/issues) to report a bug or request a feature.
 
 ## License
 
